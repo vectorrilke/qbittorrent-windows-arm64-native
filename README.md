@@ -1,13 +1,24 @@
-# qBittorrent compiled for Windows arm64
-This is a fork of minnnyres' [repo](https://github.com/minnyres/qbittorrent-windows-arm64), which seems to be not maintained anymore. I partially rewrote original workflow file with following changes:
--    updated URLs and add env variables for source code
--    updated env vars to versions corresponding to latest qbittorrent build (libtorrent 2.0.13, boost 1.91, qt 6.10.3)
--    fixed issues with Qt 6.10.2+
--    fixed ZLIB issues
+# qBittorrent Windows ARM64 Native
 
-All other credit goes to [minnyres](https://github.com/minnyres/qbittorrent-windows-arm64).
+This repository is a clean, standalone baseline focused on one build path:
 
-## Release Notes
--   **5.2.2 Compatibility:** The updated workflow designed for qBittorrent 5.2.1 remains fully compatible with version 5.2.2.
--   **Automated Publishing:** Starting with version 5.2.2, the workflow now automatically publishes builds directly to GitHub Releases.
+- native Windows ARM64 build using MSVC cross tools on GitHub Actions
+- single CI workflow: `.github/workflows/ci_windows_arm64_native.yaml`
+
+## How builds are produced
+
+- push to `main` to run CI and publish a prerelease artifact
+- push a `v*` tag (for example `v5.2.3`) to publish a release
+- run manually with `workflow_dispatch`
+
+## Build component versions
+
+Current defaults are defined in the workflow env block:
+
+- qBittorrent: `5.2.3`
+- libtorrent: `2.0.13`
+- Boost: `1.91.0`
+- Qt: `6.10.3`
+
+See `NATIVE_WORKFLOW_EXPLANATION.md` for a detailed walkthrough.
 

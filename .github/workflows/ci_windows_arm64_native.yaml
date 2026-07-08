@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - arm64-native-from-scratch
+      - main
     tags:
       - 'v*'
 
@@ -239,17 +239,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish branch prerelease
-        if: github.event_name == 'push' && github.ref == 'refs/heads/arm64-native-from-scratch'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: native-arm64-scratch-${{ github.run_number }}
+          tag_name: native-arm64-main-${{ github.run_number }}
           target_commitish: ${{ github.sha }}
-          name: qBittorrent native ARM64 scratch build ${{ github.run_number }}
+          name: qBittorrent native ARM64 main build ${{ github.run_number }}
           files: qbittorrent_${{ env.qbt_version }}_arm64.zip
           draft: false
           prerelease: true
           body: |
-            Scratch native ARM64 build from branch arm64-native-from-scratch.
+            Native ARM64 build from branch main.
             Commit: ${{ github.sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -21,11 +21,9 @@ The new workflow file is:
 
 The workflow runs when:
 
-- you push to branch `arm64-native-from-scratch`
+- you push to branch `main`
 - you push a tag like `v5.2.3`
 - you start it manually with `workflow_dispatch`
-
-This lets you test safely on the scratch branch without changing the old workflow.
 
 ### 2. Version block
 
@@ -103,33 +101,26 @@ This matches the packaging pattern already used in the existing workflow.
 There are two publishing modes:
 
 - tagged releases for `v*` tags
-- prereleases for pushes to `arm64-native-from-scratch`
+- prereleases for pushes to `main`
 
-That means every push on the scratch branch can produce a downloadable test artifact without touching your main release tags.
+That means every push on `main` can produce a downloadable prerelease artifact without touching version tags.
 
-## Which old files still matter
+## Repository baseline after cleanup
 
-For this new native MSVC workflow, the important files are:
+For this new native MSVC workflow, the key files are:
 
 - `.github/workflows/ci_windows_arm64_native.yaml`
 - `README.md`
+- `NATIVE_WORKFLOW_EXPLANATION.md`
 
-Useful to keep for now as reference:
+The following legacy files are now removed from this repository baseline:
 
 - `.github/workflows/ci_windows_arm64.yaml`
 - `.github/workflows/ci_mingw_arm64.yaml`
-
-## Which old files are probably removable later
-
-These are not needed by the new native MSVC workflow itself:
-
 - `build.sh`
 - `Toolchain-llvm-mingw.cmake`
 - `patches/`
 - root-level `qt.conf`
-- `changelog.txt`
-
-However, I recommend not deleting them until the new workflow has produced at least one known-good artifact. They are still useful as comparison material.
 
 ## Important caution
 
