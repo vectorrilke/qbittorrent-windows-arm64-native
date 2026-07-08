@@ -209,6 +209,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path upload -Force | Out-Null
           Copy-Item "qbittorrent-release-${{ env.qbt_version }}/build/qbittorrent.exe" upload
+          Copy-Item "qbittorrent-release-${{ env.qbt_version }}/build/qbittorrent.pdb" upload
           Copy-Item "qbittorrent-release-${{ env.qbt_version }}/dist/windows/qt.conf" upload
           Set-Location upload
           7z a "qbittorrent_${{ env.qbt_version }}_arm64.zip" *
