@@ -133,7 +133,8 @@ jobs:
 
           Set-Location libtorrent
           $boostRoot = (Get-Item "${{ env.boost_root }}").FullName.Replace('\\', '/')
-          $libtorrentRoot = (Resolve-Path "${{ env.libtorrent_root }}").Path.Replace('\\', '/')
+          New-Item -ItemType Directory -Path "${{ env.libtorrent_root }}" -Force | Out-Null
+          $libtorrentRoot = [System.IO.Path]::GetFullPath("${{ env.libtorrent_root }}").Replace('\\', '/')
           $toolchain = "$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
 
           cmake `
