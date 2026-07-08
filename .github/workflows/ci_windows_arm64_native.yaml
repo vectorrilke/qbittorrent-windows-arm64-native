@@ -42,6 +42,7 @@ jobs:
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
+          vcpkgGitCommitId: '84bab45d415d22042bd0b9081aea57f362da3f35'
           vcpkgDirectory: C:/vcpkg
           doNotUpdateVcpkg: true
 
