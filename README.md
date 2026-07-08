@@ -13,12 +13,9 @@ This repository is a clean, standalone baseline focused on one build path:
 
 ## Build component versions
 
-Current defaults are defined in the workflow env block:
+Current versions:
 
-- qBittorrent: `5.2.3`
+- **qBittorrent: `5.2.3`**
 - libtorrent: `2.0.13`
 - Boost: `1.91.0`
 - Qt: `6.10.3`
-
-See `NATIVE_WORKFLOW_EXPLANATION.md` for a detailed walkthrough.
-
