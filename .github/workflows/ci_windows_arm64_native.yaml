@@ -1,0 +1,255 @@
+name: Build Windows ARM64 Native
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - arm64-native-from-scratch
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-arm64-native:
+    name: Build Native ARM64
+    runs-on: windows-latest
+    env:
+      boost_version: "1.91.0"
+      libt_version: "2.0.13"
+      qbt_version: "5.2.3"
+      qt_version: "6.10.3"
+      vcpkg_triplet: "arm64-windows-static-release"
+      boost_root: "${{ github.workspace }}/../boost"
+      libtorrent_root: "${{ github.workspace }}/../libtorrent-msvc-arm64"
+      qt_target_root: "${{ github.workspace }}/../qt-msvc-arm64"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSVC cross toolchain
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64_arm64
+
+      - name: Install build tools
+        shell: pwsh
+        run: |
+          choco install ninja
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: C:/vcpkg
+          doNotUpdateVcpkg: true
+
+      - name: Normalize vcpkg paths
+        shell: pwsh
+        run: |
+          if (-not $env:RUNVCPKG_VCPKG_ROOT) {
+            throw "RUNVCPKG_VCPKG_ROOT is not set"
+          }
+
+          $vcpkgRoot = $env:RUNVCPKG_VCPKG_ROOT -replace '\\', '/'
+          "VCPKG_ROOT=$vcpkgRoot" >> $env:GITHUB_ENV
+          "VCPKG_CMAKE_ROOT=$vcpkgRoot" >> $env:GITHUB_ENV
+
+      - name: Install vcpkg dependencies
+        shell: pwsh
+        run: |
+          $packages = @(
+            "openssl:${{ env.vcpkg_triplet }}",
+            "zlib:${{ env.vcpkg_triplet }}"
+          )
+
+          & "$env:VCPKG_ROOT/vcpkg.exe" upgrade --no-dry-run
+          & "$env:VCPKG_ROOT/vcpkg.exe" install --clean-after-build @packages
+
+      - name: Build source URLs
+        shell: pwsh
+        run: |
+          $boostVersion = "${{ env.boost_version }}"
+          $boostVersionUnderscored = $boostVersion -replace '\.', '_'
+          "BOOST_URL=https://archives.boost.io/release/$boostVersion/source/boost_${boostVersionUnderscored}.7z" >> $env:GITHUB_ENV
+          "QBT_URL=https://github.com/qbittorrent/qBittorrent/archive/refs/tags/release-${{ env.qbt_version }}.tar.gz" >> $env:GITHUB_ENV
+
+      - name: Download Boost
+        shell: pwsh
+        run: |
+          aria2c "$env:BOOST_URL" -d "${{ runner.temp }}" -o "boost.7z"
+          7z x "${{ runner.temp }}/boost.7z" -o"${{ github.workspace }}/.."
+          Move-Item "${{ github.workspace }}/../boost_*" "${{ env.boost_root }}"
+
+      - name: Install Qt host tools
+        uses: jurplel/install-qt-action@v4
+        with:
+          aqtversion: '==3.3.*'
+          version: "${{ env.qt_version }}"
+          archives: 'qtbase qttools'
+          set-env: 'false'
+          dir: 'C:'
+
+      - name: Show tool versions
+        shell: pwsh
+        run: |
+          cmake --version
+          ninja --version
+
+      - name: Build Qt for ARM64
+        shell: pwsh
+        run: |
+          $env:Path = "C:\Qt\${{ env.qt_version }}\msvc2022_64\bin;" + $env:Path
+          $vcpkgRoot = $env:VCPKG_ROOT
+
+          git clone https://github.com/qt/qt5.git qt6
+          Set-Location qt6
+          git checkout "v${{ env.qt_version }}"
+          ./configure -init-submodules -submodules qtbase,qtsvg
+          Remove-Item CMakeCache.txt -ErrorAction SilentlyContinue
+
+          ./configure -opensource -confirm-license -nomake tests -nomake examples `
+            -static -static-runtime -release -xplatform win32-arm64-msvc `
+            -prefix "${{ env.qt_target_root }}" `
+            -qt-host-path "C:/Qt/${{ env.qt_version }}/msvc2022_64" `
+            -system-zlib -schannel -qt-sqlite -sql-sqlite -no-sql-mysql -no-sql-odbc -no-sql-psql -c++std c++20 -- `
+            -DCMAKE_PREFIX_PATH="$vcpkgRoot/installed/${{ env.vcpkg_triplet }}" `
+            -DCMAKE_TOOLCHAIN_FILE="$vcpkgRoot/scripts/buildsystems/vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=${{ env.vcpkg_triplet }}
+
+          cmake --build .
+          cmake --install .
+
+      - name: Build libtorrent for ARM64
+        shell: pwsh
+        run: |
+          git clone `
+            --branch v${{ env.libt_version }} `
+            --depth 1 `
+            --recurse-submodules `
+            https://github.com/arvidn/libtorrent.git
+
+          Set-Location libtorrent
+          $boostRoot = (Get-Item "${{ env.boost_root }}").FullName.Replace('\\', '/')
+          $libtorrentRoot = (Resolve-Path "${{ env.libtorrent_root }}").Path.Replace('\\', '/')
+          $toolchain = "$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+
+          cmake `
+            -B build `
+            -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_INSTALL_PREFIX="$libtorrentRoot" `
+            -DCMAKE_TOOLCHAIN_FILE="$toolchain" `
+            -DBOOST_ROOT="$boostRoot" `
+            -DBUILD_SHARED_LIBS=OFF `
+            -Ddeprecated-functions=OFF `
+            -Dstatic_runtime=ON `
+            -DVCPKG_TARGET_TRIPLET=${{ env.vcpkg_triplet }}
+
+          cmake --build build
+          cmake --install build
+
+      - name: Build qBittorrent for ARM64
+        shell: pwsh
+        run: |
+          $qtTargetRoot = (Get-Item "${{ env.qt_target_root }}").FullName.Replace('\\', '/')
+          $hostQtRoot = "C:/Qt/${{ env.qt_version }}/msvc2022_64"
+          $vcpkgInstalled = "$env:VCPKG_ROOT/installed/${{ env.vcpkg_triplet }}"
+          $boostRoot = (Get-Item "${{ env.boost_root }}").FullName.Replace('\\', '/')
+          $libtorrentDir = (Get-Item "${{ env.libtorrent_root }}").FullName.Replace('\\', '/') + '/lib/cmake/LibtorrentRasterbar'
+
+          $env:Path = "$qtTargetRoot/bin;$env:Path"
+          $env:LDFLAGS += " /FORCE:MULTIPLE"
+
+          aria2c "$env:QBT_URL"
+          tar -xf "qbittorrent-release-${{ env.qbt_version }}.tar.gz"
+          Set-Location "qbittorrent-release-${{ env.qbt_version }}"
+
+          $fixCode = @"
+          # Forced Global Promotion Hotfix
+          find_package(ZLIB REQUIRED)
+          if(TARGET ZLIB::ZLIB)
+              set_property(TARGET ZLIB::ZLIB PROPERTY IMPORTED_GLOBAL TRUE)
+          endif()
+          find_package(OpenSSL REQUIRED)
+          if(TARGET OpenSSL::SSL)
+              set_property(TARGET OpenSSL::SSL PROPERTY IMPORTED_GLOBAL TRUE)
+          endif()
+          if(TARGET OpenSSL::Crypto)
+              set_property(TARGET OpenSSL::Crypto PROPERTY IMPORTED_GLOBAL TRUE)
+          endif()
+          "@
+
+          $checkPackagesPath = "cmake/Modules/CheckPackages.cmake"
+          $originalContent = Get-Content $checkPackagesPath -Raw
+          Set-Content $checkPackagesPath -Value ($fixCode + "`n" + $originalContent)
+
+          cmake `
+            -B build `
+            -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_PREFIX_PATH="$qtTargetRoot;$hostQtRoot;$vcpkgInstalled" `
+            -DQT_HOST_PATH="$hostQtRoot" `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DVCPKG_MANIFEST_MODE=OFF `
+            -DBOOST_ROOT="$boostRoot" `
+            -DLibtorrentRasterbar_DIR="$libtorrentDir" `
+            -DMSVC_RUNTIME_DYNAMIC=OFF `
+            -DSTACKTRACE=OFF `
+            -DQT_NO_PRIVATE_MODULE_WARNING=ON `
+            -DVCPKG_TARGET_TRIPLET=${{ env.vcpkg_triplet }}
+
+          cmake --build build
+
+      - name: Package artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path upload -Force | Out-Null
+          Copy-Item "qbittorrent-release-${{ env.qbt_version }}/build/qbittorrent.exe" upload
+          Copy-Item "qbittorrent-release-${{ env.qbt_version }}/dist/windows/qt.conf" upload
+          Set-Location upload
+          7z a "qbittorrent_${{ env.qbt_version }}_arm64.zip" *
+          Move-Item "qbittorrent_${{ env.qbt_version }}_arm64.zip" ..
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qBittorrent_${{ env.qbt_version }}_arm64_native
+          path: upload
+
+      - name: Publish tagged release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.qbt_version }}
+          name: qBittorrent ${{ env.qbt_version }} (Windows ARM64 Native)
+          files: qbittorrent_${{ env.qbt_version }}_arm64.zip
+          draft: false
+          prerelease: false
+          body: |
+            Native Windows ARM64 build produced by ci_windows_arm64_native.yaml
+
+            Versions:
+            - qBittorrent: ${{ env.qbt_version }}
+            - libtorrent: ${{ env.libt_version }}
+            - Boost: ${{ env.boost_version }}
+            - Qt: ${{ env.qt_version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish branch prerelease
+        if: github.event_name == 'push' && github.ref == 'refs/heads/arm64-native-from-scratch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: native-arm64-scratch-${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          name: qBittorrent native ARM64 scratch build ${{ github.run_number }}
+          files: qbittorrent_${{ env.qbt_version }}_arm64.zip
+          draft: false
+          prerelease: true
+          body: |
+            Scratch native ARM64 build from branch arm64-native-from-scratch.
+            Commit: ${{ github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

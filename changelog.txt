@@ -1,0 +1,7 @@
+# Changelog
+
+## Unreleased
+
+- Removed the CI workaround that edited qBittorrent CMake files during the Windows ARM64 build.
+- Switched the workflow to use explicit CMake dependency root settings for OpenSSL and Zlib.
+- Kept the build configuration aligned with the vcpkg-based dependency setup.
