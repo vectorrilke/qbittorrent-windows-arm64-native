@@ -190,7 +190,8 @@ jobs:
           cmake `
             -B build `
             -G Ninja `
-            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo `
+            -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=ProgramDatabase `
             -DCMAKE_PREFIX_PATH="$qtTargetRoot;$hostQtRoot;$vcpkgInstalled" `
             -DQT_HOST_PATH="$hostQtRoot" `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
@@ -209,7 +210,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path upload -Force | Out-Null
           Copy-Item "qbittorrent-release-${{ env.qbt_version }}/build/qbittorrent.exe" upload
-          Copy-Item "qbittorrent-release-${{ env.qbt_version }}/build/qbittorrent.pdb" upload
+          Get-ChildItem "qbittorrent-release-${{ env.qbt_version }}/build" -Filter "*.pdb" -File | Copy-Item -Destination upload
           Copy-Item "qbittorrent-release-${{ env.qbt_version }}/dist/windows/qt.conf" upload
           Set-Location upload
           7z a "qbittorrent_${{ env.qbt_version }}_arm64.zip" *
