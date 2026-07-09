@@ -11,16 +11,31 @@ on:
 permissions:
   contents: write
 
+env:
+  boost_version: "1.91.0"
+  qbt_version: "5.2.3"
+  qt_version: "6.10.3"
+  vcpkg_triplet: "arm64-windows-static-release"
+
 jobs:
   build-windows-arm64-native:
-    name: Build Native ARM64
+    name: Build Native ARM64 (${{ matrix.libt_variant }})
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - libt_variant: lt12
+            libt_ref: c5ff6c3186a92ddec01f6f0a8146aaedb4a1c3f9
+            libt_version_display: "1.2.20+gitc5ff6c3186"
+            archive_suffix: ""
+            artifact_name: arm64-native-lt12
+          - libt_variant: lt20
+            libt_ref: da7a68a440b7abf4eb1a237df7168be0b8b17084
+            libt_version_display: "2.0.13+gitda7a68a440"
+            archive_suffix: "_lt20"
+            artifact_name: arm64-native-lt20
     env:
-      boost_version: "1.91.0"
-      libt_version: "2.0.13"
-      qbt_version: "5.2.3"
-      qt_version: "6.10.3"
-      vcpkg_triplet: "arm64-windows-static-release"
       boost_root: "${{ github.workspace }}/../boost"
       libtorrent_root: "${{ github.workspace }}/../libtorrent-msvc-arm64"
       qt_target_root: "${{ github.workspace }}/../qt-msvc-arm64"
@@ -125,13 +140,13 @@ jobs:
       - name: Build libtorrent for ARM64
         shell: pwsh
         run: |
-          git clone `
-            --branch v${{ env.libt_version }} `
-            --depth 1 `
-            --recurse-submodules `
-            https://github.com/arvidn/libtorrent.git
-
+          git init libtorrent
           Set-Location libtorrent
+          git remote add origin https://github.com/arvidn/libtorrent.git
+          git fetch --depth 1 origin ${{ matrix.libt_ref }}
+          git checkout FETCH_HEAD
+          git submodule update --init --recursive --depth 1
+
           $boostRoot = (Get-Item "${{ env.boost_root }}").FullName.Replace('\\', '/')
           New-Item -ItemType Directory -Path "${{ env.libtorrent_root }}" -Force | Out-Null
           $libtorrentRoot = [System.IO.Path]::GetFullPath("${{ env.libtorrent_root }}").Replace('\\', '/')
@@ -208,19 +223,49 @@ jobs:
       - name: Package artifact
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Path upload -Force | Out-Null
-          Copy-Item "qbittorrent-release-${{ env.qbt_version }}/build/qbittorrent.exe" upload
-          Get-ChildItem "qbittorrent-release-${{ env.qbt_version }}/build" -Filter "*.pdb" -File | Copy-Item -Destination upload
-          Copy-Item "qbittorrent-release-${{ env.qbt_version }}/dist/windows/qt.conf" upload
-          Set-Location upload
-          7z a "qbittorrent_${{ env.qbt_version }}_arm64.zip" *
-          Move-Item "qbittorrent_${{ env.qbt_version }}_arm64.zip" ..
+          $releaseDir = "release"
+          $symbolsDir = "symbols"
+          $artifactDir = "artifact"
+          $archiveName = "qbittorrent_${{ env.qbt_version }}${{ matrix.archive_suffix }}_arm64.zip"
+
+          New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
+          New-Item -ItemType Directory -Path $symbolsDir -Force | Out-Null
+          New-Item -ItemType Directory -Path $artifactDir -Force | Out-Null
+
+          Copy-Item "qbittorrent-release-${{ env.qbt_version }}/build/qbittorrent.exe" $releaseDir
+          Copy-Item "qbittorrent-release-${{ env.qbt_version }}/dist/windows/qt.conf" $releaseDir
+
+          $symbols = Get-ChildItem "qbittorrent-release-${{ env.qbt_version }}/build" -Filter "*.pdb" -File -ErrorAction SilentlyContinue
+          if ($symbols) {
+            $symbols | Copy-Item -Destination $symbolsDir
+          }
+
+          Set-Location $releaseDir
+          7z a "../$archiveName" *
+          Set-Location ..
+
+          Move-Item $archiveName $artifactDir
+          if ((Get-ChildItem $symbolsDir -File -ErrorAction SilentlyContinue).Count -gt 0) {
+            Move-Item $symbolsDir $artifactDir
+          }
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: qBittorrent_${{ env.qbt_version }}_arm64_native
-          path: upload
+          name: ${{ matrix.artifact_name }}
+          path: artifact
+
+  publish-release:
+    name: Publish release assets
+    needs: build-windows-arm64-native
+    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
 
       - name: Publish tagged release
         if: startsWith(github.ref, 'refs/tags/')
@@ -228,15 +273,20 @@ jobs:
         with:
           tag_name: v${{ env.qbt_version }}
           name: qBittorrent ${{ env.qbt_version }} (Windows ARM64 Native)
-          files: qbittorrent_${{ env.qbt_version }}_arm64.zip
+          files: |
+            artifacts/arm64-native-lt12/qbittorrent_${{ env.qbt_version }}_arm64.zip
+            artifacts/arm64-native-lt20/qbittorrent_${{ env.qbt_version }}_lt20_arm64.zip
           draft: false
           prerelease: false
           body: |
-            Native Windows ARM64 build produced by ci_windows_arm64_native.yaml
+            Native Windows ARM64 builds produced by ci_windows_arm64_native.yaml
 
-            Versions:
+            Variants:
+            - qBittorrent ${{ env.qbt_version }} for libtorrent 1.2.20+gitc5ff6c3186
+            - qBittorrent ${{ env.qbt_version }} lt20 for libtorrent 2.0.13+gitda7a68a440
+
+            Common versions:
             - qBittorrent: ${{ env.qbt_version }}
-            - libtorrent: ${{ env.libt_version }}
             - Boost: ${{ env.boost_version }}
             - Qt: ${{ env.qt_version }}
         env:
@@ -248,12 +298,18 @@ jobs:
         with:
           tag_name: native-arm64-main-${{ github.run_number }}
           target_commitish: ${{ github.sha }}
-          name: qBittorrent native ARM64 main build ${{ github.run_number }}
-          files: qbittorrent_${{ env.qbt_version }}_arm64.zip
+          name: qBittorrent native ARM64 main builds ${{ github.run_number }}
+          files: |
+            artifacts/arm64-native-lt12/qbittorrent_${{ env.qbt_version }}_arm64.zip
+            artifacts/arm64-native-lt20/qbittorrent_${{ env.qbt_version }}_lt20_arm64.zip
           draft: false
           prerelease: true
           body: |
-            Native ARM64 build from branch main.
+            Native ARM64 builds from branch main.
             Commit: ${{ github.sha }}
+
+            Variants:
+            - qBittorrent ${{ env.qbt_version }} for libtorrent 1.2.20+gitc5ff6c3186
+            - qBittorrent ${{ env.qbt_version }} lt20 for libtorrent 2.0.13+gitda7a68a440
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
