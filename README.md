@@ -1,21 +1,19 @@
 # qBittorrent Windows ARM64 Native
 
-This repository is a clean, standalone baseline focused on one build path:
+Aim of this repository is to provide native ARM64 builds of qBittorrent, since creators of qBittorrent have currently [no intentions](https://github.com/qbittorrent/qBittorrent/discussions/23613#discussioncomment-15508814) to provide them themselves.
 
+It is done through: 
 - native Windows ARM64 build using MSVC cross tools on GitHub Actions
 - single CI workflow: `.github/workflows/ci_windows_arm64_native.yaml`
+arm64
+## About and thank you
+This project was heavily influenced by [minnyres'](https://github.com/minnyres/qbittorrent-windows-arm64) project, but sadly he seems to not mantain his repository anymore.
 
-## How builds are produced
 
-- push to `main` to run CI and publish a prerelease artifact
-- push a `v*` tag (for example `v5.2.3`) to publish a release
-- run manually with `workflow_dispatch`
+## Latest build: v5.2.3
 
-## Build component versions
-
-Current versions:
-
-- **qBittorrent: `5.2.3`**
+Component versions:
+- qBittorrent: `5.2.3`
 - libtorrent: `2.0.13`
 - Boost: `1.91.0`
 - Qt: `6.10.3`
