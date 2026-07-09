@@ -282,34 +282,40 @@ jobs:
           body: |
             Native Windows ARM64 builds produced by ci_windows_arm64_native.yaml
 
-            Variants:
-            - qBittorrent ${{ env.qbt_version }} for libtorrent 1.2.20+gitc5ff6c3186 (Boost 1.86.0)
-            - qBittorrent ${{ env.qbt_version }} lt20 for libtorrent 2.0.13+gitda7a68a440 (Boost 1.91.0)
-
-            Common versions:
+            Library versions:
             - qBittorrent: ${{ env.qbt_version }}
             - Qt: ${{ env.qt_version }}
+            - vcpkg triplet: ${{ env.vcpkg_triplet }}
+            - libtorrent (lt12): 1.2.20+gitc5ff6c3186
+            - Boost (lt12): 1.86.0
+            - libtorrent (lt20): 2.0.13+gitda7a68a440
+            - Boost (lt20): 1.91.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish branch prerelease
+      - name: Publish branch release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: native-arm64-main-${{ github.run_number }}
           target_commitish: ${{ github.sha }}
-          name: qBittorrent native ARM64 main builds ${{ github.run_number }}
+          name: qBittorrent native ARM64 main release ${{ github.run_number }}
           files: |
             artifacts/arm64-native-lt12/qbittorrent_${{ env.qbt_version }}_arm64.zip
             artifacts/arm64-native-lt20/qbittorrent_${{ env.qbt_version }}_lt20_arm64.zip
           draft: false
-          prerelease: true
+          prerelease: false
           body: |
             Native ARM64 builds from branch main.
             Commit: ${{ github.sha }}
 
-            Variants:
-            - qBittorrent ${{ env.qbt_version }} for libtorrent 1.2.20+gitc5ff6c3186 (Boost 1.86.0)
-            - qBittorrent ${{ env.qbt_version }} lt20 for libtorrent 2.0.13+gitda7a68a440 (Boost 1.91.0)
+            Library versions:
+            - qBittorrent: ${{ env.qbt_version }}
+            - Qt: ${{ env.qt_version }}
+            - vcpkg triplet: ${{ env.vcpkg_triplet }}
+            - libtorrent (lt12): 1.2.20+gitc5ff6c3186
+            - Boost (lt12): 1.86.0
+            - libtorrent (lt20): 2.0.13+gitda7a68a440
+            - Boost (lt20): 1.91.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
