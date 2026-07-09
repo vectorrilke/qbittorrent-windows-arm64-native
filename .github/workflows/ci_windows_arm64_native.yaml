@@ -12,7 +12,6 @@ permissions:
   contents: write
 
 env:
-  boost_version: "1.91.0"
   qbt_version: "5.2.3"
   qt_version: "6.10.3"
   vcpkg_triplet: "arm64-windows-static-release"
@@ -27,11 +26,13 @@ jobs:
         include:
           - libt_variant: lt12
             libt_ref: c5ff6c3186a92ddec01f6f0a8146aaedb4a1c3f9
+            boost_version: "1.86.0"
             libt_version_display: "1.2.20+gitc5ff6c3186"
             archive_suffix: ""
             artifact_name: arm64-native-lt12
           - libt_variant: lt20
             libt_ref: da7a68a440b7abf4eb1a237df7168be0b8b17084
+            boost_version: "1.91.0"
             libt_version_display: "2.0.13+gitda7a68a440"
             archive_suffix: "_lt20"
             artifact_name: arm64-native-lt20
@@ -86,7 +87,7 @@ jobs:
       - name: Build source URLs
         shell: pwsh
         run: |
-          $boostVersion = "${{ env.boost_version }}"
+          $boostVersion = "${{ matrix.boost_version }}"
           $boostVersionUnderscored = $boostVersion -replace '\.', '_'
           "BOOST_URL=https://archives.boost.io/release/$boostVersion/source/boost_${boostVersionUnderscored}.7z" >> $env:GITHUB_ENV
           "QBT_URL=https://github.com/qbittorrent/qBittorrent/archive/refs/tags/release-${{ env.qbt_version }}.tar.gz" >> $env:GITHUB_ENV
