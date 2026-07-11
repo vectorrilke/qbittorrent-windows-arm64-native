@@ -203,6 +203,11 @@ jobs:
           $originalContent = Get-Content $checkPackagesPath -Raw
           Set-Content $checkPackagesPath -Value ($fixCode + "`n" + $originalContent)
 
+          $commonConfigPath = "cmake/Modules/CommonConfig.cmake"
+          $commonConfig = Get-Content $commonConfigPath -Raw
+          $commonConfig = $commonConfig -replace "QT_DISABLE_DEPRECATED_UP_TO=0x060500", "QT_DISABLE_DEPRECATED_UP_TO=0x060A00"
+          Set-Content $commonConfigPath -Value $commonConfig
+
           cmake `
             -B build `
             -G Ninja `
