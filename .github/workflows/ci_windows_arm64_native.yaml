@@ -161,7 +161,8 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE="$toolchain" `
             -DBOOST_ROOT="$boostRoot" `
             -DBUILD_SHARED_LIBS=OFF `
-            -Ddeprecated-functions=OFF `
+            -Dmmap-disk-io=OFF `
+            -Ddeprecated-functions=ON `
             -Dstatic_runtime=ON `
             -DVCPKG_TARGET_TRIPLET=${{ env.vcpkg_triplet }}
 
@@ -178,7 +179,6 @@ jobs:
           $libtorrentDir = (Get-Item "${{ env.libtorrent_root }}").FullName.Replace('\\', '/') + '/lib/cmake/LibtorrentRasterbar'
 
           $env:Path = "$qtTargetRoot/bin;$env:Path"
-          $env:LDFLAGS += " /FORCE:MULTIPLE"
 
           aria2c "$env:QBT_URL"
           tar -xf "qbittorrent-release-${{ env.qbt_version }}.tar.gz"
@@ -255,6 +255,64 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}
           path: artifact
+
+  smoke-test-windows-arm64-native:
+    name: Smoke test Native ARM64 (${{ matrix.libt_variant }})
+    needs: build-windows-arm64-native
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - libt_variant: lt12
+            artifact_name: arm64-native-lt12
+            archive_suffix: ""
+          - libt_variant: lt20
+            artifact_name: arm64-native-lt20
+            archive_suffix: "_lt20"
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: artifact
+
+      - name: Run qBittorrent smoke test
+        shell: pwsh
+        run: |
+          $zipFile = Get-ChildItem artifact -Filter "qbittorrent_*.zip" -File | Select-Object -First 1
+          if (-not $zipFile) {
+            throw "No packaged artifact zip found in downloaded build output"
+          }
+
+          $smokeRoot = Join-Path $env:RUNNER_TEMP "qbittorrent-smoke-${{ matrix.libt_variant }}"
+          New-Item -ItemType Directory -Path $smokeRoot -Force | Out-Null
+          Expand-Archive -Path $zipFile.FullName -DestinationPath $smokeRoot -Force
+
+          $exePath = Join-Path $smokeRoot "qbittorrent.exe"
+          if (-not (Test-Path $exePath)) {
+            throw "qbittorrent.exe was not found after extracting the build artifact"
+          }
+
+          New-Item -ItemType Directory -Path (Join-Path $smokeRoot "profile") -Force | Out-Null
+
+          $process = Start-Process -FilePath $exePath -WorkingDirectory $smokeRoot -PassThru
+          try {
+            Wait-Process -Id $process.Id -Timeout 45 -ErrorAction Stop
+          } catch {
+            if (-not $process.HasExited) {
+              Stop-Process -Id $process.Id -Force
+              Write-Host "qBittorrent stayed alive for the smoke-test window"
+              return
+            }
+
+            throw
+          }
+
+          if ($process.ExitCode -ne 0) {
+            throw "qBittorrent exited with code $($process.ExitCode) during the smoke test"
+          }
 
   publish-release:
     name: Publish release assets
