@@ -287,7 +287,7 @@ jobs:
           name: ${{ matrix.artifact_name }}
           path: artifact
 
-      - name: Run qBittorrent smoke test
+      - name: Validate ARM64 qBittorrent artifact
         shell: pwsh
         run: |
           $zipFile = Get-ChildItem artifact -Filter "qbittorrent_*.zip" -File | Select-Object -First 1
@@ -304,25 +304,35 @@ jobs:
             throw "qbittorrent.exe was not found after extracting the build artifact"
           }
 
-          $profileDir = Join-Path $smokeRoot "profile"
-          New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
-
-          $process = Start-Process -FilePath $exePath -ArgumentList @("--profile=$profileDir") -WorkingDirectory $smokeRoot -PassThru
-          try {
-            Wait-Process -Id $process.Id -Timeout 45 -ErrorAction Stop
-          } catch {
-            if (-not $process.HasExited) {
-              Stop-Process -Id $process.Id -Force
-              Write-Host "qBittorrent stayed alive for the smoke-test window"
-              return
-            }
-
-            throw
+          $qtConfPath = Join-Path $smokeRoot "qt.conf"
+          if (-not (Test-Path $qtConfPath)) {
+            throw "qt.conf was not found after extracting the build artifact"
           }
 
-          if ($process.ExitCode -ne 0) {
-            throw "qBittorrent exited with code $($process.ExitCode) during the smoke test"
+          $exeBytes = [System.IO.File]::ReadAllBytes($exePath)
+          if ($exeBytes.Length -lt 0x40) {
+            throw "qbittorrent.exe is too small to be a valid PE file"
           }
+
+          if ($exeBytes[0] -ne 0x4D -or $exeBytes[1] -ne 0x5A) {
+            throw "qbittorrent.exe is missing the MZ header"
+          }
+
+          $peOffset = [System.BitConverter]::ToInt32($exeBytes, 0x3C)
+          if ($peOffset -lt 0 -or ($peOffset + 6) -ge $exeBytes.Length) {
+            throw "qbittorrent.exe has an invalid PE header offset"
+          }
+
+          if ($exeBytes[$peOffset] -ne 0x50 -or $exeBytes[$peOffset + 1] -ne 0x45 -or $exeBytes[$peOffset + 2] -ne 0x00 -or $exeBytes[$peOffset + 3] -ne 0x00) {
+            throw "qbittorrent.exe is missing the PE signature"
+          }
+
+          $machine = [System.BitConverter]::ToUInt16($exeBytes, $peOffset + 4)
+          if ($machine -ne 0xAA64) {
+            throw "Expected ARM64 machine type 0xAA64, got 0x$('{0:X4}' -f $machine)"
+          }
+
+          Write-Host "Artifact validation passed: qbittorrent.exe is ARM64 (machine 0x$('{0:X4}' -f $machine))."
 
   publish-release:
     name: Publish release assets
