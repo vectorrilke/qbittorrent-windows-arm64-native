@@ -212,6 +212,7 @@ jobs:
             -G Ninja `
             -DCMAKE_BUILD_TYPE=RelWithDebInfo `
             -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=ProgramDatabase `
+            -DCMAKE_EXE_LINKER_FLAGS="/FORCE:MULTIPLE" `
             -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES="$cmakePreloadPath" `
             -DCMAKE_PREFIX_PATH="$qtTargetRoot;$hostQtRoot;$vcpkgInstalled" `
             -DQT_HOST_PATH="$hostQtRoot" `
