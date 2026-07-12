@@ -184,30 +184,6 @@ jobs:
           tar -xf "qbittorrent-release-${{ env.qbt_version }}.tar.gz"
           Set-Location "qbittorrent-release-${{ env.qbt_version }}"
 
-          $fixCode = @"
-          # Forced Global Promotion Hotfix
-          find_package(ZLIB REQUIRED)
-          if(TARGET ZLIB::ZLIB)
-              set_property(TARGET ZLIB::ZLIB PROPERTY IMPORTED_GLOBAL TRUE)
-          endif()
-          find_package(OpenSSL REQUIRED)
-          if(TARGET OpenSSL::SSL)
-              set_property(TARGET OpenSSL::SSL PROPERTY IMPORTED_GLOBAL TRUE)
-          endif()
-          if(TARGET OpenSSL::Crypto)
-              set_property(TARGET OpenSSL::Crypto PROPERTY IMPORTED_GLOBAL TRUE)
-          endif()
-          "@
-
-          $checkPackagesPath = "cmake/Modules/CheckPackages.cmake"
-          $originalContent = Get-Content $checkPackagesPath -Raw
-          Set-Content $checkPackagesPath -Value ($fixCode + "`n" + $originalContent)
-
-          $commonConfigPath = "cmake/Modules/CommonConfig.cmake"
-          $commonConfig = Get-Content $commonConfigPath -Raw
-          $commonConfig = $commonConfig -replace "QT_DISABLE_DEPRECATED_UP_TO=0x060500", "QT_DISABLE_DEPRECATED_UP_TO=0x060A00"
-          Set-Content $commonConfigPath -Value $commonConfig
-
           # Ensure the deprecation cutoff applies to every target, including qbt_app.
           $env:CXXFLAGS = (($env:CXXFLAGS + " /DQT_DISABLE_DEPRECATED_UP_TO=0x060A00").Trim())
 
@@ -218,6 +194,9 @@ jobs:
             -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=ProgramDatabase `
             -DCMAKE_PREFIX_PATH="$qtTargetRoot;$hostQtRoot;$vcpkgInstalled" `
             -DQT_HOST_PATH="$hostQtRoot" `
+            -DCMAKE_FIND_PACKAGE_TARGETS_GLOBAL=ON `
+            -DOPENSSL_ROOT_DIR="$vcpkgInstalled" `
+            -DZLIB_ROOT="$vcpkgInstalled" `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
             -DVCPKG_MANIFEST_MODE=OFF `
             -DBOOST_ROOT="$boostRoot" `
@@ -303,9 +282,10 @@ jobs:
             throw "qbittorrent.exe was not found after extracting the build artifact"
           }
 
-          New-Item -ItemType Directory -Path (Join-Path $smokeRoot "profile") -Force | Out-Null
+          $profileDir = Join-Path $smokeRoot "profile"
+          New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
 
-          $process = Start-Process -FilePath $exePath -WorkingDirectory $smokeRoot -PassThru
+          $process = Start-Process -FilePath $exePath -ArgumentList @("--profile=$profileDir") -WorkingDirectory $smokeRoot -PassThru
           try {
             Wait-Process -Id $process.Id -Timeout 45 -ErrorAction Stop
           } catch {
