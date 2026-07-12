@@ -183,22 +183,24 @@ jobs:
           aria2c "$env:QBT_URL"
           tar -xf "qbittorrent-release-${{ env.qbt_version }}.tar.gz"
           Set-Location "qbittorrent-release-${{ env.qbt_version }}"
+          $qbtSourceDir = (Get-Location).Path
+          $cmakePreloadFile = Join-Path $qbtSourceDir "ci-preload.cmake"
 
-              $cmakePreloadPath = [System.IO.Path]::GetFullPath("ci-preload.cmake").Replace('\\', '/')
-              $cmakePreload = @(
-              'find_package(ZLIB REQUIRED)'
-              'if(TARGET ZLIB::ZLIB)'
-              '    set_property(TARGET ZLIB::ZLIB PROPERTY IMPORTED_GLOBAL TRUE)'
-              'endif()'
-              'find_package(OpenSSL REQUIRED)'
-              'if(TARGET OpenSSL::SSL)'
-              '    set_property(TARGET OpenSSL::SSL PROPERTY IMPORTED_GLOBAL TRUE)'
-              'endif()'
-              'if(TARGET OpenSSL::Crypto)'
-              '    set_property(TARGET OpenSSL::Crypto PROPERTY IMPORTED_GLOBAL TRUE)'
-              'endif()'
-              ) -join "`n"
-              Set-Content -Path "ci-preload.cmake" -Value $cmakePreload
+          $cmakePreload = @(
+            'find_package(ZLIB REQUIRED)'
+            'if(TARGET ZLIB::ZLIB)'
+            '    set_property(TARGET ZLIB::ZLIB PROPERTY IMPORTED_GLOBAL TRUE)'
+            'endif()'
+            'find_package(OpenSSL REQUIRED)'
+            'if(TARGET OpenSSL::SSL)'
+            '    set_property(TARGET OpenSSL::SSL PROPERTY IMPORTED_GLOBAL TRUE)'
+            'endif()'
+            'if(TARGET OpenSSL::Crypto)'
+            '    set_property(TARGET OpenSSL::Crypto PROPERTY IMPORTED_GLOBAL TRUE)'
+            'endif()'
+          ) -join "`n"
+          Set-Content -Path $cmakePreloadFile -Value $cmakePreload
+          $cmakePreloadPath = (Get-Item $cmakePreloadFile).FullName.Replace('\\', '/')
 
           # Ensure the deprecation cutoff applies to every target, including qbt_app.
           $env:CXXFLAGS = (($env:CXXFLAGS + " /DQT_DISABLE_DEPRECATED_UP_TO=0x060A00").Trim())
