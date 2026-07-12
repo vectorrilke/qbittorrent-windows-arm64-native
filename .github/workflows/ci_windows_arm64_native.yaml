@@ -184,6 +184,22 @@ jobs:
           tar -xf "qbittorrent-release-${{ env.qbt_version }}.tar.gz"
           Set-Location "qbittorrent-release-${{ env.qbt_version }}"
 
+            $cmakePreloadPath = [System.IO.Path]::GetFullPath("ci-preload.cmake").Replace('\\', '/')
+            $cmakePreload = @"
+            find_package(ZLIB REQUIRED)
+            if(TARGET ZLIB::ZLIB)
+              set_property(TARGET ZLIB::ZLIB PROPERTY IMPORTED_GLOBAL TRUE)
+            endif()
+            find_package(OpenSSL REQUIRED)
+            if(TARGET OpenSSL::SSL)
+              set_property(TARGET OpenSSL::SSL PROPERTY IMPORTED_GLOBAL TRUE)
+            endif()
+            if(TARGET OpenSSL::Crypto)
+              set_property(TARGET OpenSSL::Crypto PROPERTY IMPORTED_GLOBAL TRUE)
+            endif()
+            "@
+            Set-Content -Path "ci-preload.cmake" -Value $cmakePreload
+
           # Ensure the deprecation cutoff applies to every target, including qbt_app.
           $env:CXXFLAGS = (($env:CXXFLAGS + " /DQT_DISABLE_DEPRECATED_UP_TO=0x060A00").Trim())
 
@@ -192,6 +208,7 @@ jobs:
             -G Ninja `
             -DCMAKE_BUILD_TYPE=RelWithDebInfo `
             -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=ProgramDatabase `
+            -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES="$cmakePreloadPath" `
             -DCMAKE_PREFIX_PATH="$qtTargetRoot;$hostQtRoot;$vcpkgInstalled" `
             -DQT_HOST_PATH="$hostQtRoot" `
             -DCMAKE_FIND_PACKAGE_TARGETS_GLOBAL=ON `
