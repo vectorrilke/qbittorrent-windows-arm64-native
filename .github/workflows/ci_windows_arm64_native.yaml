@@ -202,9 +202,6 @@ jobs:
           Set-Content -Path $cmakePreloadFile -Value $cmakePreload
           $cmakePreloadPath = (Get-Item $cmakePreloadFile).FullName.Replace('\\', '/')
 
-          # Ensure the deprecation cutoff applies to every target, including qbt_app.
-          $env:CXXFLAGS = (($env:CXXFLAGS + " /DQT_DISABLE_DEPRECATED_UP_TO=0x060A00").Trim())
-
           cmake `
             -B build `
             -G Ninja `
