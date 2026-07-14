@@ -225,6 +225,7 @@ jobs:
             -DMSVC_RUNTIME_DYNAMIC=OFF `
             -DSTACKTRACE=OFF `
             -DQT_NO_PRIVATE_MODULE_WARNING=ON `
+            -DCMAKE_EXE_LINKER_FLAGS="/FORCE:MULTIPLE" `
             -DVCPKG_TARGET_TRIPLET=${{ env.vcpkg_triplet }}
 
           cmake --build build
