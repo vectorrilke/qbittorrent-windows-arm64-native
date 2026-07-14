@@ -161,6 +161,7 @@ jobs:
             -Dmmap-disk-io=OFF `
             -Ddeprecated-functions=ON `
             -Dstatic_runtime=ON `
+            -Dopenssl=OFF `
             -DVCPKG_TARGET_TRIPLET=${{ env.vcpkg_triplet }}
 
           cmake --build build
