@@ -130,9 +130,7 @@ jobs:
             -static -static-runtime -release -xplatform win32-arm64-msvc `
             -prefix "${{ env.qt_target_root }}" `
             -qt-host-path "C:/Qt/${{ env.qt_version }}/msvc2022_64" `
-            -system-zlib -schannel -no-openssl -qt-sqlite -sql-sqlite -no-sql-mysql -no-sql-odbc -no-sql-psql -c++std c++20 -- `
-            -DCMAKE_TOOLCHAIN_FILE="$vcpkgRoot/scripts/buildsystems/vcpkg.cmake" `
-            -DVCPKG_TARGET_TRIPLET=${{ env.vcpkg_triplet }}
+            -qt-zlib -schannel -no-openssl -qt-sqlite -sql-sqlite -no-sql-mysql -no-sql-odbc -no-sql-psql -c++std c++20
 
           cmake --build .
           cmake --install .
