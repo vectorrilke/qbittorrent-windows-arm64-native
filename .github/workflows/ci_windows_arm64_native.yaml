@@ -7,6 +7,10 @@ on:
       - main
     tags:
       - 'v*-arm64'
+    paths-ignore:
+      - 'README.md'
+      - 'NATIVE_WORKFLOW_EXPLANATION.md'
+      - '**/*.md'
 
 permissions:
   contents: write
