@@ -8,13 +8,13 @@ Workflow file:
 
 ## Current baseline
 
-The pipeline is now single-track and lt20-only:
+The pipeline is now single-track and libtorrent version 2+ only:
 
 - default branch: main
 - one active workflow
 - one libtorrent target (lt20)
 
-There is no lt12 build path, no lt12 smoke test, and no lt12 release artifact.
+The workflow targets libtorrent 2.x only; libtorrent 1.2 (lt12) is retired from CI builds.
 
 ## Trigger model
 
