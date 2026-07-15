@@ -2,12 +2,6 @@ name: Build Windows ARM64 Native
 
 on:
   workflow_dispatch:
-    inputs:
-      build_lt12:
-        description: "Also build legacy libtorrent 1.2 (lt12)"
-        required: false
-        type: boolean
-        default: false
   push:
     branches:
       - main
@@ -29,7 +23,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJson((github.event_name == 'workflow_dispatch' && inputs.build_lt12) && '[{"libt_variant":"lt12","libt_ref":"c5ff6c3186a92ddec01f6f0a8146aaedb4a1c3f9","boost_version":"1.86.0","libt_version_display":"1.2.20+gitc5ff6c3186","archive_suffix":"","artifact_name":"arm64-native-lt12"},{"libt_variant":"lt20","libt_ref":"da7a68a440b7abf4eb1a237df7168be0b8b17084","boost_version":"1.91.0","libt_version_display":"2.0.13+gitda7a68a440","archive_suffix":"_lt20","artifact_name":"arm64-native-lt20"}]' || '[{"libt_variant":"lt20","libt_ref":"da7a68a440b7abf4eb1a237df7168be0b8b17084","boost_version":"1.91.0","libt_version_display":"2.0.13+gitda7a68a440","archive_suffix":"_lt20","artifact_name":"arm64-native-lt20"}]') }}
+        include:
+          - libt_variant: lt20
+            libt_ref: da7a68a440b7abf4eb1a237df7168be0b8b17084
+            boost_version: "1.91.0"
+            libt_version_display: "2.0.13+gitda7a68a440"
+            archive_suffix: "_lt20"
+            artifact_name: arm64-native-lt20
     env:
       boost_root: "${{ github.workspace }}/../boost"
       libtorrent_root: "${{ github.workspace }}/../libtorrent-msvc-arm64"
