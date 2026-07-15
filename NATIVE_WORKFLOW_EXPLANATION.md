@@ -101,13 +101,13 @@ Tagged release path:
 
 - tag format: v<qbt_version>-arm64
 - release tag_name: v<qbt_version>-arm64
-- release title: qBittorrent <qbt_version> (Windows ARM64 Native)
+- release title: qBittorrent <qbt_version>-arm64
 - asset: artifacts/<artifact_name>/qbittorrent_<qbt_version>_arm64.zip
 
 Main-branch release path:
 
-- tag_name: native-arm64-main-<run_number>
-- release title: qBittorrent native ARM64 <run_number>
+- tag_name: v<qbt_version>-arm64
+- release title: qBittorrent <qbt_version>-arm64
 - asset: artifacts/<artifact_name>/qbittorrent_<qbt_version>_arm64.zip
 
 Both release bodies include current qBittorrent/Qt/vcpkg/libtorrent/Boost versions from env.

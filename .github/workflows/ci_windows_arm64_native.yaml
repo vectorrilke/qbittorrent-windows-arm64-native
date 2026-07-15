@@ -320,7 +320,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.qbt_version }}-arm64
-          name: qBittorrent ${{ env.qbt_version }} (Windows ARM64 Native)
+          name: qBittorrent ${{ env.qbt_version }}-arm64
           files: |
             artifacts/${{ env.artifact_name }}/qbittorrent_${{ env.qbt_version }}_arm64.zip
           draft: false
@@ -341,9 +341,9 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: native-arm64-main-${{ github.run_number }}
+          tag_name: v${{ env.qbt_version }}-arm64
           target_commitish: ${{ github.sha }}
-          name: qBittorrent native ARM64 ${{ github.run_number }}
+          name: qBittorrent ${{ env.qbt_version }}-arm64
           files: |
             artifacts/${{ env.artifact_name }}/qbittorrent_${{ env.qbt_version }}_arm64.zip
           draft: false
