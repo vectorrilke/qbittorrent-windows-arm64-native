@@ -1,107 +1,114 @@
 # Native ARM64 Workflow Explanation
 
-This repository uses a single CI workflow that builds native Windows ARM64 qBittorrent binaries with MSVC cross tools on GitHub Actions.
+This repository uses one CI workflow to build native Windows ARM64 qBittorrent binaries with MSVC cross tools on GitHub Actions.
 
 Workflow file:
 
 - .github/workflows/ci_windows_arm64_native.yaml
 
-## Current repository baseline
+## Current baseline
 
-The repo is intentionally minimal:
+The pipeline is now single-track and lt20-only:
 
-- one default branch: main
-- one active workflow: ci_windows_arm64_native.yaml
-- one build strategy: MSVC-based ARM64 native executable matrixed by libtorrent branch
+- default branch: main
+- one active workflow
+- one libtorrent target (lt20)
 
-Legacy workflows and MinGW helper files were removed to reduce confusion and maintenance overhead.
+There is no lt12 build path, no lt12 smoke test, and no lt12 release artifact.
 
 ## Trigger model
 
 The workflow runs on:
 
 - push to main
-- push of tags matching v*
+- push of tags matching v*-arm64
 - manual workflow_dispatch
 
-This supports continuous prerelease builds from main and stable release builds from version tags.
+This gives:
 
-## Version control surface
+- branch releases from main
+- tagged releases from ARM64 version tags
 
-The workflow has global versions and matrix-specific versions.
+## Version surface
 
-Global values are in the workflow env block:
+Versions and build identity are defined in top-level env variables:
 
 - qbt_version
 - qt_version
 - vcpkg_triplet
-
-Matrix values are in strategy.matrix.include:
-
 - libt_variant
 - libt_ref
-- boost_version
 - libt_version_display
-- archive_suffix
+- boost_version
 - artifact_name
 
-This split allows lt12 and lt20 to use different Boost versions safely.
-
-Current matrix at the time of writing:
-
-- lt12: libtorrent 1.2.20+gitc5ff6c3186 with Boost 1.86.0
-- lt20: libtorrent 2.0.13+gitda7a68a440 with Boost 1.91.0
+This keeps future version bumps in one place.
 
 ## Toolchain and dependency model
 
-The job uses:
+The workflow uses:
 
 - ilammy/msvc-dev-cmd for ARM64 cross compilation
-- lukka/run-vcpkg with a pinned baseline commit
+- lukka/run-vcpkg pinned to a fixed vcpkg baseline commit
 - Ninja for CMake builds
 
-All dependency resolution is aligned to one triplet:
+Dependency triplet is fixed to:
 
 - arm64-windows-static-release
 
-That triplet is used consistently for OpenSSL, zlib, Qt configuration, libtorrent, and qBittorrent.
-
-vcpkg is pinned to a fixed baseline commit to reduce random breakage from upstream package changes.
-
 ## Build stages
 
-1. Setup compiler and tools
-2. Initialize vcpkg and install dependencies
-3. Resolve source URLs for qBittorrent and matrix-selected Boost
-4. Download and unpack Boost
-5. Build Qt target libraries for ARM64
-6. Build libtorrent for ARM64 from exact commit ref in matrix
-7. Build qBittorrent (RelWithDebInfo)
-8. Package artifact zip and optional symbols folder
-9. Upload one artifact per matrix entry
-10. Publish both matrix artifacts in one release job
+1. Setup MSVC ARM64 cross toolchain and build tools.
+2. Setup and normalize vcpkg paths.
+3. Install dependency packages (OpenSSL and zlib for the triplet).
+4. Build source URLs for Boost and qBittorrent tarball.
+5. Download/unpack Boost.
+6. Install Qt host tools and build Qt target libs for ARM64.
+7. Build libtorrent (lt20 ref from env) for ARM64.
+8. Build qBittorrent.
+9. Package artifact zip.
+10. Upload artifact.
+11. Run ARM64 smoke validation (PE signature and machine type check).
+12. Publish release assets for tag/main rules.
 
-## Packaging and publishing
+## Important build guards
 
-Packaged files include:
+Two key safeguards are intentionally present:
+
+- libtorrent configure uses -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=TRUE
+	to avoid duplicate OpenSSL symbol paths in the final static link setup.
+
+- qBittorrent CommonConfig is patched during CI from
+	QT_DISABLE_DEPRECATED_UP_TO=0x060500 to 0x040800
+	to match Windows static linking compatibility expectations and avoid
+	Qt removed_api duplicate symbol linker failures.
+
+## Packaging model
+
+Packaged zip contents:
 
 - qbittorrent.exe
-- dist/windows/qt.conf from qBittorrent sources
+- qt.conf
 
-Generated artifact names:
+Artifact zip filename:
 
-- lt12: qbittorrent_<qbt_version>_arm64.zip
-- lt20: qbittorrent_<qbt_version>_lt20_arm64.zip
+- qbittorrent_<qbt_version>_arm64.zip
 
-PDB files are not included in release ZIP files. If present, they are uploaded under a symbols folder inside the CI artifact.
+PDB/symbol artifacts are not packaged or published.
 
-Publishing rules:
+## Release model
 
-- pushes to main create prerelease releases with both artifacts
-- v* tags create stable releases with both artifacts
+Tagged release path:
 
-## Notes
+- tag format: v<qbt_version>-arm64
+- release tag_name: v<qbt_version>-arm64
+- release title: qBittorrent <qbt_version> (Windows ARM64 Native)
+- asset: artifacts/<artifact_name>/qbittorrent_<qbt_version>_arm64.zip
 
-- If a matrix entry starts failing, check the exact first compiler/linker error in that variant job before changing shared workflow logic.
-- A known compatibility rule is that libtorrent 1.2.20 requires Boost 1.86.0 in this pipeline.
-- Runtime issues in a specific qBittorrent version may still require upstream fixes and are not always CI-related.
+Main-branch release path:
+
+- tag_name: native-arm64-main-<run_number>
+- release title: qBittorrent native ARM64 <run_number>
+- asset: artifacts/<artifact_name>/qbittorrent_<qbt_version>_arm64.zip
+
+Both release bodies include current qBittorrent/Qt/vcpkg/libtorrent/Boost versions from env.
