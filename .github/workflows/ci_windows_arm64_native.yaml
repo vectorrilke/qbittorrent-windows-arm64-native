@@ -19,7 +19,6 @@ env:
   libt_ref: "da7a68a440b7abf4eb1a237df7168be0b8b17084"
   libt_version_display: "2.0.13+gitda7a68a440"
   boost_version: "1.91.0"
-  archive_suffix: "_lt20"
   artifact_name: "arm64-native-lt20"
 
 jobs:
@@ -222,7 +221,7 @@ jobs:
         run: |
           $releaseDir = "release"
           $artifactDir = "artifact"
-          $archiveName = "qbittorrent_${{ env.qbt_version }}${{ env.archive_suffix }}_arm64.zip"
+          $archiveName = "qbittorrent_${{ env.qbt_version }}_arm64.zip"
 
           New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
           New-Item -ItemType Directory -Path $artifactDir -Force | Out-Null
@@ -320,7 +319,7 @@ jobs:
           tag_name: v${{ env.qbt_version }}-arm64
           name: qBittorrent ${{ env.qbt_version }} (Windows ARM64 Native)
           files: |
-            artifacts/${{ env.artifact_name }}/qbittorrent_${{ env.qbt_version }}${{ env.archive_suffix }}_arm64.zip
+            artifacts/${{ env.artifact_name }}/qbittorrent_${{ env.qbt_version }}_arm64.zip
           draft: false
           prerelease: false
           body: |
@@ -343,7 +342,7 @@ jobs:
           target_commitish: ${{ github.sha }}
           name: qBittorrent native ARM64 ${{ github.run_number }}
           files: |
-            artifacts/${{ env.artifact_name }}/qbittorrent_${{ env.qbt_version }}${{ env.archive_suffix }}_arm64.zip
+            artifacts/${{ env.artifact_name }}/qbittorrent_${{ env.qbt_version }}_arm64.zip
           draft: false
           prerelease: false
           body: |
