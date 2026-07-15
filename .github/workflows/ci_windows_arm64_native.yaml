@@ -161,7 +161,7 @@ jobs:
             -Dmmap-disk-io=OFF `
             -Ddeprecated-functions=ON `
             -Dstatic_runtime=ON `
-            -Dopenssl=OFF `
+            -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=TRUE `
             -DVCPKG_TARGET_TRIPLET=${{ env.vcpkg_triplet }}
 
           cmake --build build
@@ -223,7 +223,6 @@ jobs:
             -DMSVC_RUNTIME_DYNAMIC=OFF `
             -DSTACKTRACE=OFF `
             -DQT_NO_PRIVATE_MODULE_WARNING=ON `
-            -DCMAKE_EXE_LINKER_FLAGS="/FORCE:MULTIPLE" `
             -DVCPKG_TARGET_TRIPLET=${{ env.vcpkg_triplet }}
 
           cmake --build build
