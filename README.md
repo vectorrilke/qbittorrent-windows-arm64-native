@@ -9,12 +9,14 @@ Builds are produced through:
 
 ## About and thank you
 
-This project was heavily inspired by [minnyres' work](https://github.com/minnyres/qbittorrent-windows-arm64). That repository appears to have been inactive for some time, but its early work remains the foundation this project builds on. 
+This project was heavily inspired by [minnyres' work](https://github.com/minnyres/qbittorrent-windows-arm64). That repository appears to have been inactive for some time, but its early work remains the foundation this project builds on.
 Many thanks for the original effort and groundwork.
 
-## Downloads:
+## Downloads
 
-- Download latest version [here](https://github.com/vectorrilke/qbittorrent-windows-arm64-native/releases/latest).
+- Download the [latest ARM64 release](https://github.com/vectorrilke/qbittorrent-windows-arm64-native/releases/latest).
+
+This release is distributed as a zip archive with no installer. You can extract and run it directly, but qBittorrent still creates and loads its settings from `%APPDATA%`, so it does not behave like a fully self-contained portable app by default.
 
 ## Latest build: `v5.2.3`
 
