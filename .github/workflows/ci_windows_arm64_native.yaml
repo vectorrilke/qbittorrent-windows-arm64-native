@@ -19,15 +19,14 @@ env:
   qbt_version: "5.2.3"
   qt_version: "6.10.3"
   vcpkg_triplet: "arm64-windows-static-release"
-  libt_variant: "lt20"
-  libt_ref: "da7a68a440b7abf4eb1a237df7168be0b8b17084"
-  libt_version_display: "2.0.13+gitda7a68a440"
+  libtorrent_ref: "da7a68a440b7abf4eb1a237df7168be0b8b17084"
+  libtorrent_version: "2.0.13+gitda7a68a440"
   boost_version: "1.91.0"
-  artifact_name: "arm64-native-lt20"
+  artifact_name: "arm64-native"
 
 jobs:
   build-windows-arm64-native:
-    name: Build Native ARM64 (lt20)
+    name: Build Native ARM64
     runs-on: windows-latest
     env:
       boost_root: "${{ github.workspace }}/../boost"
@@ -134,7 +133,7 @@ jobs:
           git init libtorrent
           Set-Location libtorrent
           git remote add origin https://github.com/arvidn/libtorrent.git
-          git fetch --depth 1 origin ${{ env.libt_ref }}
+          git fetch --depth 1 origin ${{ env.libtorrent_ref }}
           git checkout FETCH_HEAD
           git submodule update --init --recursive --depth 1
 
@@ -246,7 +245,7 @@ jobs:
           path: artifact
 
   smoke-test-windows-arm64-native:
-    name: Smoke test Native ARM64 (lt20)
+    name: Smoke test Native ARM64
     needs: build-windows-arm64-native
     runs-on: windows-latest
 
@@ -265,7 +264,7 @@ jobs:
             throw "No packaged artifact zip found in downloaded build output"
           }
 
-          $smokeRoot = Join-Path $env:RUNNER_TEMP "qbittorrent-smoke-${{ env.libt_variant }}"
+          $smokeRoot = Join-Path $env:RUNNER_TEMP "qbittorrent-smoke-arm64"
           New-Item -ItemType Directory -Path $smokeRoot -Force | Out-Null
           Expand-Archive -Path $zipFile.FullName -DestinationPath $smokeRoot -Force
 
@@ -333,8 +332,8 @@ jobs:
             - qBittorrent: ${{ env.qbt_version }}
             - Qt: ${{ env.qt_version }}
             - vcpkg triplet: ${{ env.vcpkg_triplet }}
-            - libtorrent (${{ env.libt_variant }}): ${{ env.libt_version_display }}
-            - Boost (${{ env.libt_variant }}): ${{ env.boost_version }}
+            - libtorrent: ${{ env.libtorrent_version }}
+            - Boost: ${{ env.boost_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -357,7 +356,7 @@ jobs:
             - qBittorrent: ${{ env.qbt_version }}
             - Qt: ${{ env.qt_version }}
             - vcpkg triplet: ${{ env.vcpkg_triplet }}
-            - libtorrent (${{ env.libt_variant }}): ${{ env.libt_version_display }}
-            - Boost (${{ env.libt_variant }}): ${{ env.boost_version }}
+            - libtorrent: ${{ env.libtorrent_version }}
+            - Boost: ${{ env.boost_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

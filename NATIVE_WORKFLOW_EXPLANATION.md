@@ -12,7 +12,7 @@ The pipeline is now single-track and libtorrent version 2+ only:
 
 - default branch: main
 - one active workflow
-- one libtorrent target (lt20)
+- one libtorrent 2.x target
 
 The workflow targets libtorrent 2.x only; libtorrent 1.2 (lt12) is retired from CI builds.
 
@@ -36,9 +36,8 @@ Versions and build identity are defined in top-level env variables:
 - qbt_version
 - qt_version
 - vcpkg_triplet
-- libt_variant
-- libt_ref
-- libt_version_display
+- libtorrent_ref
+- libtorrent_version
 - boost_version
 - artifact_name
 
@@ -64,7 +63,7 @@ Dependency triplet is fixed to:
 4. Build source URLs for Boost and qBittorrent tarball.
 5. Download/unpack Boost.
 6. Install Qt host tools and build Qt target libs for ARM64.
-7. Build libtorrent (lt20 ref from env) for ARM64.
+7. Build libtorrent (ref from env) for ARM64.
 8. Build qBittorrent.
 9. Package artifact zip.
 10. Upload artifact.
@@ -76,12 +75,12 @@ Dependency triplet is fixed to:
 Two key safeguards are intentionally present:
 
 - libtorrent configure uses -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=TRUE
-	to avoid duplicate OpenSSL symbol paths in the final static link setup.
+  to avoid duplicate OpenSSL symbol paths in the final static link setup.
 
 - qBittorrent CommonConfig is patched during CI from
-	QT_DISABLE_DEPRECATED_UP_TO=0x060500 to 0x040800
-	to match Windows static linking compatibility expectations and avoid
-	Qt removed_api duplicate symbol linker failures.
+  QT_DISABLE_DEPRECATED_UP_TO=0x060500 to 0x040800
+  to match Windows static linking compatibility expectations and avoid
+  Qt removed_api duplicate symbol linker failures.
 
 ## Packaging model
 
