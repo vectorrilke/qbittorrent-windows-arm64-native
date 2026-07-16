@@ -20,7 +20,7 @@ This release is distributed as a zip archive with no installer. You can extract 
 
 ## Latest build: `v5.2.3`
 
-Component versions:
+Components mirror upstream versions:
 
 - libtorrent: `2.0.13+gitda7a68a440`
 - Boost: `1.91.0`
