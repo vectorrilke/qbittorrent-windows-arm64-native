@@ -5,7 +5,7 @@ The goal of this repository is to provide native Windows ARM64 builds of [qBitto
 Builds are produced through:
 
 - native Windows ARM64 cross-compilation with MSVC toolchains on GitHub Actions
-- a single CI workflow: `.github/workflows/ci_windows_arm64_native.yaml`. Commentary and explanation available created [by Github Copilot](/NATIVE_WORKFLOW_EXPLANATION.md).
+- a single CI workflow: `.github/workflows/ci_windows_arm64_native.yaml`. Commentary and explanation available [summed up by Github Copilot](/NATIVE_WORKFLOW_EXPLANATION.md).
 
 ## About and thank you
 
