@@ -16,12 +16,12 @@ permissions:
   contents: write
 
 env:
-  qbt_version: "5.2.3"
+  qbt_version: "5.2.4"
   qt_version: "6.10.3"
   vcpkg_triplet: "arm64-windows-static-release"
-  libtorrent_ref: "da7a68a440b7abf4eb1a237df7168be0b8b17084"
-  libtorrent_version: "2.0.13+gitda7a68a440"
-  boost_version: "1.91.0"
+  libtorrent_ref: "2bc9c4f7dacb70e89f7ac73e9fa7fc02ed2b395a"
+  libtorrent_version: "2.0.15+git2bc9c4f7da"
+  boost_version: "1.92.0"
   artifact_name: "arm64-native"
 
 jobs:
@@ -132,7 +132,7 @@ jobs:
         run: |
           git init libtorrent
           Set-Location libtorrent
-          git remote add origin https://github.com/arvidn/libtorrent.git
+          git remote add origin https://github.com/airium/libtorrent-rasterbar.git
           git fetch --depth 1 origin ${{ env.libtorrent_ref }}
           git checkout FETCH_HEAD
           git submodule update --init --recursive --depth 1
