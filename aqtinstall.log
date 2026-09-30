@@ -1,0 +1,8 @@
+2026-09-30 20:51:40,801 - aqt.metadata - DEBUG - metadata 140613124726912 Connection to 'https://download.qt.io' failed. Retrying with fallback 'https://mirrors.ukfast.co.uk/sites/qt.io/'.
+2026-09-30 20:51:43,808 - aqt.main - ERROR - installer 140613124726912 Failure to connect to https://mirrors.ukfast.co.uk/sites/qt.io/online/qtsdkrepository/windows_x86/desktop/: ConnectionError
+2026-09-30 20:51:49,099 - aqt.metadata - DEBUG - metadata 139816621031552 Connection to 'https://download.qt.io' failed. Retrying with fallback 'https://qt.mirror.constant.com/'.
+2026-09-30 20:51:52,105 - aqt.main - ERROR - installer 139816621031552 Failure to connect to https://qt.mirror.constant.com/online/qtsdkrepository/windows_x86/desktop/: ConnectionError
+2026-09-30 20:53:11,086 - aqt.metadata - DEBUG - metadata 140348836352128 Connection to 'https://download.qt.io' failed. Retrying with fallback 'https://mirrors.dotsrc.org/qtproject/'.
+2026-09-30 20:53:14,093 - aqt.main - ERROR - installer 140348836352128 Failure to connect to https://mirrors.dotsrc.org/qtproject/online/qtsdkrepository/windows_x86/desktop/: ConnectionError
+==============================Suggested follow-up:==============================
+* Please use 'aqt list-qt windows desktop' to check that versions of qt exist within the spec '6.11.2'.

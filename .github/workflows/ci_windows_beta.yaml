@@ -32,6 +32,7 @@ jobs:
       boost_root: "${{ github.workspace }}/../boost"
       libtorrent_root: "${{ github.workspace }}/../libtorrent-msvc-arm64"
       qt_target_root: "${{ github.workspace }}/../qt-msvc-arm64"
+      qt_host_root: "${{ github.workspace }}/../qt-msvc-x64-host"
 
     steps:
       - name: Checkout repository
@@ -92,15 +93,36 @@ jobs:
           Move-Item "${{ github.workspace }}/../boost_*" "${{ env.boost_root }}"
 
 
-      - name: Install Qt host tools
-        uses: jurplel/install-qt-action@v4
+      - name: Setup native MSVC toolchain for host Qt
+        uses: ilammy/msvc-dev-cmd@v1
         with:
-          aqtversion: '==3.3.*'
-          version: "${{ env.qt_version }}"
-          archives: 'qtbase qttools'
-          set-env: 'false'
-          dir: 'C:'
-          extra: '--base https://download.qt.io'
+          arch: amd64
+
+      - name: Build Qt host tools from source
+        shell: pwsh
+        run: |
+          # Qt ${{ env.qt_version }} is not yet published to the aqt/qtsdkrepository
+          # online repository (only source archives are available on
+          # https://download.qt.io/official_releases/qt/), so build the host tools
+          # (moc, rcc, uic, qmake, lupdate, lrelease) natively from source instead of
+          # relying on jurplel/install-qt-action.
+          git clone https://github.com/qt/qt5.git qt6-host
+          Set-Location qt6-host
+          git checkout "v${{ env.qt_version }}"
+          ./configure -init-submodules -submodules qtbase,qttools
+          Remove-Item CMakeCache.txt -ErrorAction SilentlyContinue
+
+          ./configure -opensource -confirm-license -nomake tests -nomake examples `
+            -release -prefix "${{ env.qt_host_root }}" `
+            -qt-zlib -schannel -no-openssl -qt-sqlite -sql-sqlite -no-sql-mysql -no-sql-odbc -no-sql-psql -c++std c++20
+
+          cmake --build .
+          cmake --install .
+
+      - name: Restore cross MSVC toolchain for ARM64
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64_arm64
 
       - name: Show tool versions
         shell: pwsh
@@ -111,7 +133,8 @@ jobs:
       - name: Build Qt for ARM64
         shell: pwsh
         run: |
-          $env:Path = "C:\Qt\${{ env.qt_version }}\msvc2022_64\bin;" + $env:Path
+          $qtHostRoot = (Get-Item "${{ env.qt_host_root }}").FullName.Replace('\\', '/')
+          $env:Path = "$qtHostRoot/bin;" + $env:Path
           $vcpkgRoot = $env:VCPKG_ROOT
 
           git clone https://github.com/qt/qt5.git qt6
@@ -123,7 +146,7 @@ jobs:
           ./configure -opensource -confirm-license -nomake tests -nomake examples `
             -static -static-runtime -release -xplatform win32-arm64-msvc `
             -prefix "${{ env.qt_target_root }}" `
-            -qt-host-path "C:/Qt/${{ env.qt_version }}/msvc2022_64" `
+            -qt-host-path "$qtHostRoot" `
             -qt-zlib -schannel -no-openssl -qt-sqlite -sql-sqlite -no-sql-mysql -no-sql-odbc -no-sql-psql -c++std c++20
 
           cmake --build .
@@ -165,7 +188,7 @@ jobs:
         shell: pwsh
         run: |
           $qtTargetRoot = (Get-Item "${{ env.qt_target_root }}").FullName.Replace('\\', '/')
-          $hostQtRoot = "C:/Qt/${{ env.qt_version }}/msvc2022_64"
+          $hostQtRoot = (Get-Item "${{ env.qt_host_root }}").FullName.Replace('\\', '/')
           $vcpkgInstalled = "$env:VCPKG_ROOT/installed/${{ env.vcpkg_triplet }}"
           $boostRoot = (Get-Item "${{ env.boost_root }}").FullName.Replace('\\', '/')
           $libtorrentDir = (Get-Item "${{ env.libtorrent_root }}").FullName.Replace('\\', '/') + '/lib/cmake/LibtorrentRasterbar'
