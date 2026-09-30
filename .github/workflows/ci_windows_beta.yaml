@@ -91,6 +91,7 @@ jobs:
           7z x "${{ runner.temp }}/boost.7z" -o"${{ github.workspace }}/.."
           Move-Item "${{ github.workspace }}/../boost_*" "${{ env.boost_root }}"
 
+
       - name: Install Qt host tools
         uses: jurplel/install-qt-action@v4
         with:
@@ -99,6 +100,7 @@ jobs:
           archives: 'qtbase qttools'
           set-env: 'false'
           dir: 'C:'
+          extra: '--base https://download.qt.io'
 
       - name: Show tool versions
         shell: pwsh
