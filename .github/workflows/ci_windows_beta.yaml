@@ -110,8 +110,9 @@ jobs:
           # https://download.qt.io/official_releases/qt/), so build the host tools
           # (moc, rcc, uic, qmake, lupdate, lrelease) natively from source instead of
           # relying on jurplel/install-qt-action.
-          git clone https://github.com/qt/qt5.git qt6-host
-          Set-Location qt6-host
+          $qtHostSourceRoot = Join-Path "${{ runner.temp }}" "qt6-host"
+          git clone https://github.com/qt/qt5.git "$qtHostSourceRoot"
+          Set-Location $qtHostSourceRoot
           git checkout "v${{ env.qt_version }}"
           ./configure -init-submodules -submodules qtbase,qttools
           Remove-Item CMakeCache.txt -ErrorAction SilentlyContinue
@@ -141,8 +142,9 @@ jobs:
           $env:Path = "$qtHostRoot/bin;" + $env:Path
           $vcpkgRoot = $env:VCPKG_ROOT
 
-          git clone https://github.com/qt/qt5.git qt6
-          Set-Location qt6
+          $qtTargetSourceRoot = Join-Path "${{ runner.temp }}" "qt6-target"
+          git clone https://github.com/qt/qt5.git "$qtTargetSourceRoot"
+          Set-Location $qtTargetSourceRoot
           git checkout "v${{ env.qt_version }}"
           ./configure -init-submodules -submodules qtbase,qtsvg
           Remove-Item CMakeCache.txt -ErrorAction SilentlyContinue
