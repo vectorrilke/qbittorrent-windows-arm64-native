@@ -17,7 +17,7 @@ permissions:
 
 env:
   qbt_version: "5.3.0rc1"
-  qt_version: "6.10.3"
+  qt_version: "6.11.2"
   vcpkg_triplet: "arm64-windows-static-release"
   libtorrent_ref: "be61ae8f44d1af21c1ee17ca9c8dc5e1054ebb47"
   libtorrent_version: "2.1.2+gitbe61ae8f44"
@@ -94,7 +94,7 @@ jobs:
       - name: Install Qt host tools
         uses: jurplel/install-qt-action@v4
         with:
-          aqtversion: '==3.3.*'
+          aqtsource: 'git+https://github.com/miurahr/aqtinstall.git@076e1659807d0b362a3ed684d54c2e9c775eb9c7'
           version: "${{ env.qt_version }}"
           archives: 'qtbase qttools'
           set-env: 'false'
