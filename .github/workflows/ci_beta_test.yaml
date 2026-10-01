@@ -14,9 +14,6 @@ on:
       - '.github/workflows/ci_windows_beta.yaml'
       - '.github/workflows/ci_windows_arm64_native.yaml'
 
-permissions:
-  contents: write
-
 env:
   qbt_version: "5.3.0rc1"
   qt_version: "6.11.2"
@@ -123,7 +120,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.qt_target_root }}
-          key: qt-arm64-${{ env.qt_version }}-${{ hashFiles('.github/workflows/ci_beta_test.yaml') }}
+          # Bump the trailing vN suffix whenever the target build configuration
+          # changes in a way that is incompatible with previously cached output.
+          key: qt-arm64-${{ env.qt_version }}-${{ env.vcpkg_triplet }}-${{ runner.os }}-v1
       
       - name: Build Qt for ARM64
         if: steps.cache-qt.outputs.cache-hit != 'true'
@@ -328,6 +327,8 @@ jobs:
     needs: build-windows-arm64-native
     if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Download build artifacts
@@ -339,6 +340,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ github.token }}
           tag_name: v${{ env.qbt_version }}-arm64
           name: qBittorrent ${{ env.qbt_version }}-arm64
           files: |
@@ -354,13 +356,12 @@ jobs:
             - vcpkg triplet: ${{ env.vcpkg_triplet }}
             - libtorrent: ${{ env.libtorrent_version }}
             - Boost: ${{ env.boost_version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish branch release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ github.token }}
           tag_name: v${{ env.qbt_version }}-arm64
           target_commitish: ${{ github.sha }}
           name: qBittorrent ${{ env.qbt_version }}-arm64
@@ -378,5 +379,3 @@ jobs:
             - vcpkg triplet: ${{ env.vcpkg_triplet }}
             - libtorrent: ${{ env.libtorrent_version }}
             - Boost: ${{ env.boost_version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
