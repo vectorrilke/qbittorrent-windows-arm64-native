@@ -232,7 +232,7 @@ jobs:
             -DBOOST_ROOT="$boostRoot" `
             -DLibtorrentRasterbar_DIR="$libtorrentDir" `
             -DMSVC_RUNTIME_DYNAMIC=OFF `
-            -DSTACKTRACE=OFF `
+            -DSTACKTRACE=ON `
             -DQT_NO_PRIVATE_MODULE_WARNING=ON `
             -DVCPKG_TARGET_TRIPLET=${{ env.vcpkg_triplet }}
 
@@ -250,6 +250,7 @@ jobs:
 
           Copy-Item "qbittorrent-release-${{ env.qbt_version }}/build/qbittorrent.exe" $releaseDir
           Copy-Item "qbittorrent-release-${{ env.qbt_version }}/dist/windows/qt.conf" $releaseDir
+          Copy-Item "qbittorrent-release-${{ env.qbt_version }}/build/qbittorrent.pdb" $artifactDir
 
           Set-Location $releaseDir
           7z a "../$archiveName" *
