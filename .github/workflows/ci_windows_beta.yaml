@@ -126,6 +126,16 @@ jobs:
         with:
           arch: amd64
 
+      - name: Restore vcpkg path after host MSVC toolchain setup
+        shell: pwsh
+        run: |
+          # ilammy/msvc-dev-cmd resets VCPKG_ROOT to the Visual Studio-bundled
+          # vcpkg instance on every invocation, clobbering the C:/vcpkg root
+          # normalized above (where our openssl/zlib packages actually live).
+          # VCPKG_CMAKE_ROOT is never touched by msvc-dev-cmd, so use it to
+          # restore the correct value.
+          "VCPKG_ROOT=$env:VCPKG_CMAKE_ROOT" >> $env:GITHUB_ENV
+
       - name: Cache Qt host build
         id: cache-qt-host
         uses: actions/cache@v4
@@ -162,6 +172,15 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64_arm64
+
+      - name: Restore vcpkg path after ARM64 MSVC toolchain setup
+        shell: pwsh
+        run: |
+          # See "Restore vcpkg path after host MSVC toolchain setup" above:
+          # msvc-dev-cmd clobbers VCPKG_ROOT again here, and the libtorrent
+          # and qBittorrent builds below rely on it pointing at C:/vcpkg to
+          # find the openssl/zlib packages installed earlier.
+          "VCPKG_ROOT=$env:VCPKG_CMAKE_ROOT" >> $env:GITHUB_ENV
 
       - name: Show tool versions
         shell: pwsh
@@ -209,7 +228,9 @@ jobs:
           path: ${{ env.libtorrent_root }}
           # Bump the trailing vN suffix whenever the build configuration
           # below changes in a way that is incompatible with previously cached output.
-          key: libtorrent-${{ env.libtorrent_ref }}-${{ env.vcpkg_triplet }}-${{ env.boost_version }}-v1
+          # v2: fixed VCPKG_ROOT being clobbered by msvc-dev-cmd so OpenSSL is
+          # now correctly discovered and linked into libtorrent.
+          key: libtorrent-${{ env.libtorrent_ref }}-${{ env.vcpkg_triplet }}-${{ env.boost_version }}-v2
 
       - name: Build libtorrent for ARM64
         if: steps.cache-libtorrent.outputs.cache-hit != 'true'
