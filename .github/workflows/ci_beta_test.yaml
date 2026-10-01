@@ -117,8 +117,16 @@ jobs:
         run: |
           cmake --version
           ninja --version
-
+          
+      - name: Cache Qt ARM64 build
+        id: cache-qt
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.qt_target_root }}
+          key: qt-arm64-${{ env.qt_version }}-${{ hashFiles('.github/workflows/ci_beta_test.yaml') }}
+      
       - name: Build Qt for ARM64
+        if: steps.cache-qt.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           $env:Path = "C:\Qt\${{ env.qt_version }}\msvc2022_64\bin;" + $env:Path
