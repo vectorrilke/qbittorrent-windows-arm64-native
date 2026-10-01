@@ -12,6 +12,7 @@ on:
       - 'NATIVE_WORKFLOW_EXPLANATION.md'
       - '**/*.md'
       - '.github/workflows/ci_windows_beta.yaml'
+      - '.github/workflows/ci_beta_test.yaml'
 
 permissions:
   contents: write
