@@ -95,7 +95,14 @@ jobs:
       - name: Install Qt host tools
         uses: jurplel/install-qt-action@v4
         with:
-          aqtversion: '==3.3.*'
+          # aqtinstall 3.3.* (latest PyPI release) does not understand the
+          # Qt 6.11+ Windows x64 archive layout and fails with
+          # "Failed to locate XML data for Qt version". Support for it was
+          # merged in https://github.com/miurahr/aqtinstall/pull/1000 but has
+          # not been published to PyPI yet, so install aqtinstall directly
+          # from the upstream git repository instead of waiting on a release
+          # or compiling Qt from source.
+          aqtsource: 'git+https://github.com/miurahr/aqtinstall.git@076e1659807d0b362a3ed684d54c2e9c775eb9c7'
           version: "${{ env.qt_version }}"
           archives: 'qtbase qttools'
           set-env: 'false'

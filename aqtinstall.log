@@ -6,3 +6,5 @@
 2026-09-30 20:53:14,093 - aqt.main - ERROR - installer 140348836352128 Failure to connect to https://mirrors.dotsrc.org/qtproject/online/qtsdkrepository/windows_x86/desktop/: ConnectionError
 ==============================Suggested follow-up:==============================
 * Please use 'aqt list-qt windows desktop' to check that versions of qt exist within the spec '6.11.2'.
+2026-10-01 11:23:59,137 - aqt.metadata - DEBUG - metadata 140112155340928 Connection to 'https://download.qt.io' failed. Retrying with fallback 'https://mirrors.ustc.edu.cn/qtproject/'.
+2026-10-01 11:24:02,146 - aqt.main - ERROR - installer 140112155340928 Failure to connect to https://mirrors.ustc.edu.cn/qtproject/online/qtsdkrepository/windows_x86/desktop/: ConnectionError
