@@ -129,6 +129,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.qt_host_root }}
+          # Bump the trailing vN suffix whenever the host build configuration
+          # below changes in a way that is incompatible with previously cached output.
           key: qt-host-${{ env.qt_version }}-${{ runner.os }}-v1
 
       - name: Build Qt host tools from source
@@ -170,6 +172,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.qt_target_root }}
+          # Bump the trailing vN suffix whenever the target build configuration
+          # below changes in a way that is incompatible with previously cached output.
           key: qt-target-${{ env.qt_version }}-${{ env.vcpkg_triplet }}-v1
 
       - name: Build Qt for ARM64
@@ -201,6 +205,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.libtorrent_root }}
+          # Bump the trailing vN suffix whenever the build configuration
+          # below changes in a way that is incompatible with previously cached output.
           key: libtorrent-${{ env.libtorrent_ref }}-${{ env.vcpkg_triplet }}-v1
 
       - name: Build libtorrent for ARM64
