@@ -79,7 +79,9 @@ jobs:
         with:
           path: |
             C:/vcpkg/installed
-          key: vcpkg-${{ env.vcpkg_triplet }}-${{ env.vcpkg_commit }}-${{ hashFiles('.github/workflows/ci_windows_beta.yaml') }}
+          # Bump the trailing vN suffix whenever the installed package list
+          # below changes in a way that is incompatible with previously cached output.
+          key: vcpkg-${{ env.vcpkg_triplet }}-${{ env.vcpkg_commit }}-openssl-zlib-v1
           restore-keys: |
             vcpkg-${{ env.vcpkg_triplet }}-${{ env.vcpkg_commit }}-
 
