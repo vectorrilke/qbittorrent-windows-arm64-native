@@ -155,6 +155,7 @@ jobs:
             -Dmmap-disk-io=OFF `
             -Ddeprecated-functions=ON `
             -Dstatic_runtime=ON `
+            -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=TRUE `
             -DVCPKG_TARGET_TRIPLET=${{ env.vcpkg_triplet }}
 
           cmake --build build
@@ -180,7 +181,6 @@ jobs:
           $commonConfigPath = "cmake/Modules/CommonConfig.cmake"
           $commonConfig = Get-Content $commonConfigPath -Raw
           $commonConfig = $commonConfig -replace "QT_DISABLE_DEPRECATED_UP_TO=0x060500", "QT_DISABLE_DEPRECATED_UP_TO=0x040800"
-          $commonConfig = $commonConfig.Replace('$<$<AND:$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},AMD64>,$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>>:/CETCOMPAT>', '')
           Set-Content $commonConfigPath -Value $commonConfig
 
           $cmakePreload = @(
@@ -362,3 +362,4 @@ jobs:
             - Boost: ${{ env.boost_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
