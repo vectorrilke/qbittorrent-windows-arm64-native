@@ -102,6 +102,9 @@ jobs:
           # not been published to PyPI yet, so install aqtinstall directly
           # from the upstream git repository instead of waiting on a release
           # or compiling Qt from source.
+          # TODO: switch back to a pinned PyPI `aqtversion` once a release
+          # newer than 3.3.0 containing the PR #1000 fix is published:
+          # https://pypi.org/project/aqtinstall/#history
           aqtsource: 'git+https://github.com/miurahr/aqtinstall.git@076e1659807d0b362a3ed684d54c2e9c775eb9c7'
           version: "${{ env.qt_version }}"
           archives: 'qtbase qttools'
