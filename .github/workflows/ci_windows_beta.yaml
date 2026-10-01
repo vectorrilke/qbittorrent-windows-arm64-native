@@ -11,6 +11,8 @@ on:
       - 'README.md'
       - 'NATIVE_WORKFLOW_EXPLANATION.md'
       - '**/*.md'
+      - '.github/workflows/ci_beta_test.yaml'
+      - '.github/workflows/ci_windows_arm64_native.yaml'
 
 permissions:
   contents: write
