@@ -74,8 +74,8 @@ Dependency triplet is fixed to:
 
 Two key safeguards are intentionally present:
 
-- libtorrent configure uses -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=TRUE
-  to avoid duplicate OpenSSL symbol paths in the final static link setup.
+- libtorrent uses the ARM64 OpenSSL package installed by vcpkg. OpenSSL
+  must remain enabled because libdatachannel requires it during configuration.
 
 - qBittorrent CommonConfig is patched during CI from
   QT_DISABLE_DEPRECATED_UP_TO=0x060500 to 0x040800
