@@ -155,7 +155,6 @@ jobs:
             -Dmmap-disk-io=OFF `
             -Ddeprecated-functions=ON `
             -Dstatic_runtime=ON `
-            -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=TRUE `
             -DVCPKG_TARGET_TRIPLET=${{ env.vcpkg_triplet }}
 
           cmake --build build
