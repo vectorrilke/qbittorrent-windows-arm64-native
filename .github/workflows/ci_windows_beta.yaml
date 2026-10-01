@@ -82,7 +82,7 @@ jobs:
             C:/vcpkg/installed
           # Bump the trailing vN suffix whenever the installed package list
           # below changes in a way that is incompatible with previously cached output.
-          key: vcpkg-${{ env.vcpkg_triplet }}-${{ env.vcpkg_commit }}-${{ env.vcpkg_packages }}-v1
+          key: vcpkg-${{ env.vcpkg_triplet }}-${{ env.vcpkg_commit }}-openssl-zlib-v1
           restore-keys: |
             vcpkg-${{ env.vcpkg_triplet }}-${{ env.vcpkg_commit }}-
 
