@@ -21,6 +21,7 @@ env:
   qbt_version: "5.3.0rc1"
   qt_version: "6.11.2"
   vcpkg_triplet: "arm64-windows-static-release"
+  vcpkg_commit: "84bab45d415d22042bd0b9081aea57f362da3f35"
   libtorrent_ref: "be61ae8f44d1af21c1ee17ca9c8dc5e1054ebb47"
   libtorrent_version: "2.1.2+gitbe61ae8f44"
   boost_version: "1.92.0"
@@ -57,7 +58,7 @@ jobs:
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
-          vcpkgGitCommitId: '84bab45d415d22042bd0b9081aea57f362da3f35'
+          vcpkgGitCommitId: ${{ env.vcpkg_commit }}
           vcpkgDirectory: C:/vcpkg
           doNotUpdateVcpkg: true
 
@@ -78,9 +79,9 @@ jobs:
         with:
           path: |
             C:/vcpkg/installed
-          key: vcpkg-${{ env.vcpkg_triplet }}-84bab45d415d22042bd0b9081aea57f362da3f35-${{ hashFiles('.github/workflows/ci_windows_beta.yaml') }}
+          key: vcpkg-${{ env.vcpkg_triplet }}-${{ env.vcpkg_commit }}-${{ hashFiles('.github/workflows/ci_windows_beta.yaml') }}
           restore-keys: |
-            vcpkg-${{ env.vcpkg_triplet }}-84bab45d415d22042bd0b9081aea57f362da3f35-
+            vcpkg-${{ env.vcpkg_triplet }}-${{ env.vcpkg_commit }}-
 
       - name: Install vcpkg dependencies
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
