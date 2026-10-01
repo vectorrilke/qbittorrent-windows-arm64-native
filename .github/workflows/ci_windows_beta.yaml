@@ -72,7 +72,18 @@ jobs:
           "VCPKG_ROOT=$vcpkgRoot" >> $env:GITHUB_ENV
           "VCPKG_CMAKE_ROOT=$vcpkgRoot" >> $env:GITHUB_ENV
 
+      - name: Cache vcpkg installed packages
+        id: cache-vcpkg
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:/vcpkg/installed
+          key: vcpkg-${{ env.vcpkg_triplet }}-84bab45d415d22042bd0b9081aea57f362da3f35-${{ hashFiles('.github/workflows/ci_windows_beta.yaml') }}
+          restore-keys: |
+            vcpkg-${{ env.vcpkg_triplet }}-84bab45d415d22042bd0b9081aea57f362da3f35-
+
       - name: Install vcpkg dependencies
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           $packages = @(
@@ -91,7 +102,15 @@ jobs:
           "BOOST_URL=https://archives.boost.io/release/$boostVersion/source/boost_${boostVersionUnderscored}.7z" >> $env:GITHUB_ENV
           "QBT_URL=https://github.com/qbittorrent/qBittorrent/archive/refs/tags/release-${{ env.qbt_version }}.tar.gz" >> $env:GITHUB_ENV
 
+      - name: Cache Boost
+        id: cache-boost
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.boost_root }}
+          key: boost-${{ env.boost_version }}
+
       - name: Download Boost
+        if: steps.cache-boost.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           aria2c "$env:BOOST_URL" -d "${{ runner.temp }}" -o "boost.7z"
@@ -104,7 +123,15 @@ jobs:
         with:
           arch: amd64
 
+      - name: Cache Qt host build
+        id: cache-qt-host
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.qt_host_root }}
+          key: qt-host-${{ env.qt_version }}-${{ runner.os }}-v1
+
       - name: Build Qt host tools from source
+        if: steps.cache-qt-host.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           # Qt ${{ env.qt_version }} is not yet published to the aqt/qtsdkrepository
@@ -137,7 +164,15 @@ jobs:
           cmake --version
           ninja --version
 
+      - name: Cache Qt target build
+        id: cache-qt-target
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.qt_target_root }}
+          key: qt-target-${{ env.qt_version }}-${{ env.vcpkg_triplet }}-v1
+
       - name: Build Qt for ARM64
+        if: steps.cache-qt-target.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           $qtHostRoot = (Get-Item "${{ env.qt_host_root }}").FullName.Replace('\\', '/')
@@ -160,7 +195,15 @@ jobs:
           cmake --build .
           cmake --install .
 
+      - name: Cache libtorrent build
+        id: cache-libtorrent
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.libtorrent_root }}
+          key: libtorrent-${{ env.libtorrent_ref }}-${{ env.vcpkg_triplet }}-v1
+
       - name: Build libtorrent for ARM64
+        if: steps.cache-libtorrent.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           git init libtorrent
