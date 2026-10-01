@@ -18,10 +18,10 @@ Many thanks for the original effort and groundwork.
 
 This release is distributed as a zip archive with no installer. You can extract and run it directly, but qBittorrent still creates and loads its settings from `%APPDATA%`, so it does not behave like a fully self-contained portable app by default.
 
-## Latest build: `v5.2.3`
+## Latest build: `v5.2.4`
 
 Components mirror upstream versions:
 
-- libtorrent: `2.0.13+gitda7a68a440`
-- Boost: `1.91.0`
+- libtorrent: `2.0.15+git2bc9c4f7da`
+- Boost: `1.92.0`
 - Qt: `6.10.3`
