@@ -1,4 +1,4 @@
-name: Build Windows ARM64 Native
+name: Beta build test
 
 on:
   workflow_dispatch:
