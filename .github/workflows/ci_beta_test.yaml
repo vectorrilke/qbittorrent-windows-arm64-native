@@ -77,7 +77,7 @@ jobs:
             -OverlayRoot "$overlayPorts" `
             -RepositoryRoot "${{ github.workspace }}"
 
-          & "$env:VCPKG_ROOT/vcpkg.exe" upgrade --no-dry-run
+          & "$env:VCPKG_ROOT/vcpkg.exe" upgrade --no-dry-run "--overlay-ports=$overlayPorts"
           & "$env:VCPKG_ROOT/vcpkg.exe" install --clean-after-build "--overlay-ports=$overlayPorts" @packages
 
       - name: Build source URLs
