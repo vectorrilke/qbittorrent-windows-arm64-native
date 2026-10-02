@@ -46,6 +46,22 @@ The `qbt_tag` must be an upstream qBittorrent tag like `release-5.2.4`. Qt >= 6.
 
 Re-running the workflow with the same versions updates the existing release rather than creating a new one.
 
+### What to enter in each field
+
+A good source for the numbers is the download page on [qbittorrent.org/download](https://www.qbittorrent.org/download), which lists the libtorrent, Qt and Boost versions each release was built with.
+
+| Field | What to enter | Example (5.2.4) |
+|-------|---------------|-----------------|
+| `qbt_tag` | The upstream git tag, `release-<version>`. Not `v5.2.4`, and not `v5.2.4-arm64`, which is the name of the release this workflow creates. | `release-5.2.4` |
+| `libtorrent_ref` | Only the commit hash from the website's libtorrent entry, i.e. the part after `+git`. Do not enter `2.0.15+git2bc9c4f7da`: it is a description, not a git ref, and the checkout would fail. A full hash also works. | `2bc9c4f7da` |
+| `qt_version` | The Qt version as listed. | `6.10.3` |
+| `boost_version` | The Boost version as listed. | `1.92.0` |
+
+Notes:
+- The website often lists several libtorrent and Boost versions for one release, for the different builds it ships (for example libtorrent 1.2 and 2.0). Pick the set for the build you want to match. The 5.2.3 defaults here are the libtorrent 2.0 build.
+- The release notes show the values you entered, so the libtorrent line shows the commit hash.
+- The release is tagged `v<version>-arm64`, taken from `qbt_tag` without the `release-` prefix.
+
 ## Private trackers
 
 Some private trackers have client bans. Builds with qBittorrent 5.3.0rc1 were rejected as "banned client" on one tracker, while 5.2.3 (libtorrent 2.0.x) was accepted. Some trackers also ban libtorrent 2.1. Check your tracker's approved-client list before choosing a version.
@@ -54,6 +70,6 @@ Some private trackers have client bans. Builds with qBittorrent 5.3.0rc1 were re
 
 - **Zip build:** verified working
 - **Static exe build:** verified working (built, passed the self-contained check and smoke test, and tested by hand).
-- **Release job:** not yet confirmed. Update this section once a release with both files has been published.
+- **Release job:** verified working (run 37010713060 published `v5.2.3-arm64` with the zip and the static exe).
 
 See [CHANGES.md](CHANGES.md) for the history of the workflows and [PLAN.md](PLAN.md) for the original design.
