@@ -82,7 +82,7 @@ jobs:
             C:/vcpkg/installed
           # Bump the trailing vN suffix whenever the installed package list
           # below changes in a way that is incompatible with previously cached output.
-          key: vcpkg-${{ env.vcpkg_triplet }}-${{ env.vcpkg_commit }}-openssl-zlib-${{ hashFiles('.github/scripts/prepare-openssl-arm64-overlay.ps1', '.github/vcpkg/openssl-arm64-stack-probe.patch') }}-v2
+          key: vcpkg-${{ env.vcpkg_triplet }}-${{ env.vcpkg_commit }}-openssl-zlib-v1
           restore-keys: |
             vcpkg-${{ env.vcpkg_triplet }}-${{ env.vcpkg_commit }}-
 
@@ -91,14 +91,9 @@ jobs:
         shell: pwsh
         run: |
           $packages = "${{ env.vcpkg_packages }}" -split ',' | ForEach-Object { "${_}:${{ env.vcpkg_triplet }}" }
-          $overlayPorts = Join-Path $env:RUNNER_TEMP "vcpkg-overlay-ports"
-          & "${{ github.workspace }}/.github/scripts/prepare-openssl-arm64-overlay.ps1" `
-            -VcpkgRoot "$env:VCPKG_ROOT" `
-            -OverlayRoot "$overlayPorts" `
-            -RepositoryRoot "${{ github.workspace }}"
 
           & "$env:VCPKG_ROOT/vcpkg.exe" upgrade --no-dry-run
-          & "$env:VCPKG_ROOT/vcpkg.exe" install --clean-after-build "--overlay-ports=$overlayPorts" @packages
+          & "$env:VCPKG_ROOT/vcpkg.exe" install --clean-after-build @packages
 
       - name: Build source URLs
         shell: pwsh
