@@ -11,11 +11,14 @@ Builds are produced through:
 
 Each build workflow can also be run on its own and then only produces a workflow artifact.
 
-### Latest updates
-**October 2, 2026**
-* Completely redone workflows files. 
-* Implemented caching. 
-* Release now offers both static (single-file, portable) and dynamic builds (with shared libraries, e.g. .dll / .so files)
+## Latest updates
+#### October 2, 2026**
+> * Completely redone workflows files. 
+> * Implemented caching. 
+> * Release now offers both static (single-file, portable) and dynamic builds (with shared libraries, e.g. .dll / .so files)
+
+#### October 2, 2026**
+> * Added some beta/rc releases.
 
 
 ## About and thank you
