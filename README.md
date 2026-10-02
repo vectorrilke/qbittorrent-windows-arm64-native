@@ -11,10 +11,18 @@ Builds are produced through:
 
 Each build workflow can also be run on its own and then only produces a workflow artifact.
 
+### Latest updates
+**October 2, 2026**
+* Completely redone workflows files. 
+* Implemented caching. 
+* Release now offers both static (single-file, portable) and dynamic builds (with shared libraries, e.g. .dll / .so files)
+
+
 ## About and thank you
 
 This project was heavily inspired by [minnyres' work](https://github.com/minnyres/qbittorrent-windows-arm64). That repository appears to have been inactive for some time, but its early work remains the foundation this project builds on.
 Many thanks for the original effort and groundwork.
+
 
 ## Downloads
 
