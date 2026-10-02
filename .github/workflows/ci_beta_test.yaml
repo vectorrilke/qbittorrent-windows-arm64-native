@@ -71,9 +71,14 @@ jobs:
             "openssl:${{ env.vcpkg_triplet }}",
             "zlib:${{ env.vcpkg_triplet }}"
           )
+          $overlayPorts = Join-Path $env:RUNNER_TEMP "vcpkg-overlay-ports"
+          & "${{ github.workspace }}/.github/scripts/prepare-openssl-arm64-overlay.ps1" `
+            -VcpkgRoot "$env:VCPKG_ROOT" `
+            -OverlayRoot "$overlayPorts" `
+            -RepositoryRoot "${{ github.workspace }}"
 
           & "$env:VCPKG_ROOT/vcpkg.exe" upgrade --no-dry-run
-          & "$env:VCPKG_ROOT/vcpkg.exe" install --clean-after-build @packages
+          & "$env:VCPKG_ROOT/vcpkg.exe" install --clean-after-build "--overlay-ports=$overlayPorts" @packages
 
       - name: Build source URLs
         shell: pwsh

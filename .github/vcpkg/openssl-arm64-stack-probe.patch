@@ -1,0 +1,11 @@
+diff --git a/Configurations/10-main.conf b/Configurations/10-main.conf
+--- a/Configurations/10-main.conf
++++ b/Configurations/10-main.conf
+@@ -1566,6 +1566,6 @@
+         CFLAGS           => add(picker(debug   => '/Od',
+                                        release => '/O2')),
+-        cflags           => add(picker(default => '/Gs0 /GF /Gy',
++        cflags           => add(picker(default => '/Gs4096 /GF /Gy',
+                                        debug   =>
+                                        sub {
+                                            ($disabled{shared} ? "" : "/MDd");
