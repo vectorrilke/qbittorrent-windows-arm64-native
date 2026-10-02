@@ -9,21 +9,18 @@ type: Task
 
 ---
 
-# Request new[^1] release of qBittorrent
+# Request new release of qBittorrent
 
-**Version number/tag:**
+**Version number/tag:** 
 
-**Libraries used to compile:[^2]]**
+**Libraries used to compile:**[^1]
 libtorrent-rasterbar:
 Qt:
 Boost:
 
-[^1] (or other. unreleased here) 
-[^2] Libraries are listed on qBittorrent [download page](https://www.qbittorrent.org/download) after clicking on toggle "Checksums and library versions" below link to download a release.
-Filling these info is purely optional, but it saves time. An example for v5.2.4 release is 
-```
-Library 	Version
+[^1]: Libraries are listed on qBittorrent [download page](https://www.qbittorrent.org/download) after clicking on toggle "Checksums and library versions" below link to download a release.
+Filling these info is purely optional, but it saves time. An example for v5.2.4 release is  `Library 	Version
 libtorrent-rasterbar 	1.2.20+gitc5ff6c3186 / 2.0.15+git2bc9c4f7da (v5.2.4) / 1.2.20+gitc5ff6c3186 / 2.1.2+gitbe61ae8f44 (v5.3.0rc1)
 Qt 	6.10.3 (v5.2.4) / 6.11.2 (v5.3.0rc1)
 Boost 	1.86.0 / 1.92.0 (v5.2.4) / 1.86.0 / 1.92.0 (v5.3.0rc1)
-```
+`
