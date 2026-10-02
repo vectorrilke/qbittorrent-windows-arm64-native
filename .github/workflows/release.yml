@@ -1,4 +1,4 @@
-name: Build and release (Windows ARM64)
+name: Build and release 
 
 # Main entry point: builds the zip (shared Qt) and the single exe (static Qt) in
 # parallel, then publishes both in ONE GitHub Release.
