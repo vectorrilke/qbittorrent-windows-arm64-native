@@ -1,8 +1,8 @@
 # <img src="assets/icon.svg" height="32" align="absmiddle" alt=""> qBittorrent for Windows ARM64
 
-The goal of this repository is to provide native Windows ARM64 builds of [qBittorrent](https://www.qbittorrent.org), because the qBittorrent project currently has [no plans](https://github.com/qbittorrent/qBittorrent/discussions/23613#discussioncomment-15508814) to publish official ARM64 binaries.
-
 [![Build and release](https://github.com/vectorrilke/qbittorrent-windows-arm64-native/actions/workflows/release.yml/badge.svg)](https://github.com/vectorrilke/qbittorrent-windows-arm64-native/actions/workflows/release.yml) [![Prerelease](https://img.shields.io/github/v/release/vectorrilke/qbittorrent-windows-arm64-native?include_prereleases&labelColor=2b3137&color=orange&label=prerelease)](https://github.com/vectorrilke/qbittorrent-windows-arm64-native/releases/latest) [![Release](https://img.shields.io/github/v/release/vectorrilke/qbittorrent-windows-arm64-native?labelColor=2b3137&color=6e40c9)](https://github.com/vectorrilke/qbittorrent-windows-arm64-native/releases/latest) [![Upstream](https://img.shields.io/github/v/release/qbittorrent/qBittorrent?label=upstream&logo=qbittorrent&labelColor=2b3137&color=2f67ba)](https://github.com/qbittorrent/qBittorrent/releases) ![Platform](https://img.shields.io/badge/platform-Windows%2011%20ARM64-a52a4a?logo=windows11&logoColor=white&labelColor=2b3137)
+
+The goal of this repository is to provide native Windows ARM64 builds of [qBittorrent](https://www.qbittorrent.org), because the qBittorrent project currently has [no plans](https://github.com/qbittorrent/qBittorrent/discussions/23613#discussioncomment-15508814) to publish official ARM64 binaries.
 
 Builds are produced through:
 
