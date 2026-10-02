@@ -9,7 +9,7 @@ type: Task
 
 ---
 
-# Request new release of qBittorrent
+## Request new release of qBittorrent
 
 **Version number/tag:** 
 
