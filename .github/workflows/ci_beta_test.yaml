@@ -258,7 +258,6 @@ jobs:
 
           Copy-Item "qbittorrent-release-${{ env.qbt_version }}/build/qbittorrent.exe" $releaseDir
           Copy-Item "qbittorrent-release-${{ env.qbt_version }}/dist/windows/qt.conf" $releaseDir
-          Copy-Item "qbittorrent-release-${{ env.qbt_version }}/build/qbittorrent.pdb" $artifactDir
 
           Set-Location $releaseDir
           7z a "../$archiveName" *
