@@ -371,7 +371,6 @@ jobs:
         with:
           token: ${{ github.token }}
           tag_name: v${{ env.qbt_version }}-arm64
-          target_commitish: ${{ github.sha }}
           name: qBittorrent ${{ env.qbt_version }}-arm64
           files: |
             artifacts/${{ env.artifact_name }}/qbittorrent_${{ env.qbt_version }}_arm64.zip
