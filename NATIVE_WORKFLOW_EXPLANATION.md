@@ -76,6 +76,10 @@ Two key safeguards are intentionally present:
 
 - libtorrent uses the ARM64 OpenSSL package installed by vcpkg. OpenSSL
   must remain enabled because libdatachannel requires it during configuration.
+- The ARM64 vcpkg OpenSSL build replaces `/Gs0` with `/Gs4096`. MSVC's
+  optimized ARM64 code generation with `/O2 /Gs0` can overwrite the link
+  register in OpenSSL stack probes, causing TLS parsing to jump back into the
+  function prologue and crash.
 
 - qBittorrent CommonConfig is patched during CI from
   QT_DISABLE_DEPRECATED_UP_TO=0x060500 to 0x040800
