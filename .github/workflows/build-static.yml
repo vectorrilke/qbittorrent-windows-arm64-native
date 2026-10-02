@@ -1,0 +1,318 @@
+name: Build single exe (Windows ARM64, static Qt)
+
+on:
+  workflow_dispatch:
+    inputs:
+      qbt_tag:
+        description: Upstream qBittorrent tag
+        default: release-5.2.3
+      libtorrent_ref:
+        description: libtorrent-rasterbar tag, branch or commit
+        default: da7a68a440
+      qt_version:
+        description: Qt version (built from source, statically)
+        default: 6.10.3
+      boost_version:
+        description: Boost version
+        default: 1.91.0
+  workflow_call:
+    inputs:
+      qbt_tag:
+        type: string
+        default: ''
+      libtorrent_ref:
+        type: string
+        default: ''
+      qt_version:
+        type: string
+        default: ''
+      boost_version:
+        type: string
+        default: ''
+    outputs:
+      qbt_version:
+        value: ${{ jobs.build.outputs.qbt_version }}
+      libtorrent_ref:
+        value: ${{ jobs.build.outputs.libtorrent_ref }}
+      qt_version:
+        value: ${{ jobs.build.outputs.qt_version }}
+      boost_version:
+        value: ${{ jobs.build.outputs.boost_version }}
+
+permissions:
+  contents: read
+
+env:
+  # ---- Versions: edit these (or use the dispatch inputs) to pick what gets built ----
+  QBT_TAG: ${{ inputs.qbt_tag || 'release-5.2.3' }}
+  LIBTORRENT_REF: ${{ inputs.libtorrent_ref || 'da7a68a440' }} # 2.0.13+gitda7a68a440
+  QT_VERSION: ${{ inputs.qt_version || '6.10.3' }}
+  BOOST_VERSION: ${{ inputs.boost_version || '1.91.0' }}
+  # OpenSSL and zlib come from vcpkg; this ref decides their versions.
+  VCPKG_REF: master
+  # Static libraries + static CRT (/MT), so the exe needs no VC++ runtime DLLs.
+  VCPKG_TRIPLET: arm64-windows-static
+  # Bump when the Qt configure options below change, to rebuild the cached Qt.
+  QT_STATIC_CACHE_REV: v1
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: windows-11-arm
+    outputs:
+      qbt_version: ${{ steps.ver.outputs.qbt_version }}
+      libtorrent_ref: ${{ env.LIBTORRENT_REF }}
+      qt_version: ${{ env.QT_VERSION }}
+      boost_version: ${{ env.BOOST_VERSION }}
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      DEPS: ${{ github.workspace }}\deps
+    steps:
+      - name: Prepare directories
+        run: New-Item -ItemType Directory -Force $env:DEPS | Out-Null
+
+      - name: Derive qBittorrent version from tag
+        id: ver
+        run: |
+          $v = $env:QBT_TAG -replace '^release-', ''
+          "qbt_version=$v" | Out-File -Append $env:GITHUB_OUTPUT
+          "QBT_VERSION=$v" | Out-File -Append $env:GITHUB_ENV
+
+      - name: Set up MSVC (ARM64)
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: arm64
+
+      - name: Clone qBittorrent ${{ env.QBT_TAG }}
+        run: git clone --depth 1 --branch $env:QBT_TAG https://github.com/qbittorrent/qBittorrent.git qbittorrent
+
+      # qBittorrent sets QT_DISABLE_DEPRECATED_UP_TO, which makes the Qt headers inline a few
+      # functions that static Qt6Core.lib (removed_api.cpp) also defines. That gives LNK2005
+      # duplicate symbols when linking statically, so drop the define for this build.
+      - name: Drop QT_DISABLE_DEPRECATED define for static Qt
+        run: |
+          $f = "qbittorrent\cmake\Modules\CommonConfig.cmake"
+          $c = Get-Content $f -Raw
+          $n = $c -replace '[ \t]*QT_DISABLE_DEPRECATED_(UP_TO|BEFORE)=0x[0-9A-Fa-f]+\r?\n', ''
+          if ($n -eq $c) { Write-Warning "No QT_DISABLE_DEPRECATED define found in $f, nothing to drop" }
+          else { Set-Content $f $n -NoNewline; "Dropped QT_DISABLE_DEPRECATED define" }
+
+      # ---------- Boost (headers only) ----------
+      - name: Cache Boost headers
+        id: cache-boost
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.DEPS }}\boost
+          key: boost-${{ env.BOOST_VERSION }}
+
+      - name: Download Boost ${{ env.BOOST_VERSION }}
+        if: steps.cache-boost.outputs.cache-hit != 'true'
+        run: |
+          $v = $env:BOOST_VERSION
+          $name = "boost_$($v -replace '\.', '_')"
+          $zip = Join-Path $env:RUNNER_TEMP "$name.tar.gz"
+          Invoke-WebRequest "https://archives.boost.io/release/$v/source/$name.tar.gz" -OutFile $zip
+          New-Item -ItemType Directory -Force "$env:DEPS\boost-tmp" | Out-Null
+          tar -xzf $zip -C "$env:DEPS\boost-tmp" "$name/boost"
+          Move-Item "$env:DEPS\boost-tmp\$name" "$env:DEPS\boost"
+
+      # ---------- OpenSSL + zlib (vcpkg, static CRT) ----------
+      - name: Cache vcpkg packages
+        id: cache-vcpkg
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS }}\vcpkg
+          key: vcpkg-${{ env.VCPKG_REF }}-${{ env.VCPKG_TRIPLET }}
+
+      - name: Build OpenSSL and zlib with vcpkg
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git "$env:DEPS\vcpkg"
+          git -C "$env:DEPS\vcpkg" checkout $env:VCPKG_REF
+          & "$env:DEPS\vcpkg\bootstrap-vcpkg.bat" -disableMetrics
+          & "$env:DEPS\vcpkg\vcpkg.exe" install openssl zlib --triplet $env:VCPKG_TRIPLET
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+
+      - name: Save vcpkg packages cache
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.DEPS }}\vcpkg
+          key: vcpkg-${{ env.VCPKG_REF }}-${{ env.VCPKG_TRIPLET }}
+      # ---------- Qt, built from source as static libraries with static CRT ----------
+      # The first run takes a long time; later runs restore the result from the cache.
+      - name: Cache static Qt
+        id: cache-qt
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS }}\Qt-static
+          key: qt-static-${{ env.QT_VERSION }}-arm64-${{ env.QT_STATIC_CACHE_REV }}
+
+      - name: Download Qt sources
+        if: steps.cache-qt.outputs.cache-hit != 'true'
+        run: |
+          $v = $env:QT_VERSION
+          $minor = $v.Substring(0, $v.LastIndexOf('.'))
+          New-Item -ItemType Directory -Force "$env:DEPS\qt-src" | Out-Null
+          foreach ($m in 'qtbase', 'qtsvg', 'qttools') {
+            $archive = Join-Path $env:RUNNER_TEMP "$m.tar.xz"
+            Invoke-WebRequest "https://download.qt.io/official_releases/qt/$minor/$v/submodules/$m-everywhere-src-$v.tar.xz" -OutFile $archive
+            tar -xf $archive -C "$env:DEPS\qt-src"
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          }
+
+      - name: Build static qtbase
+        if: steps.cache-qt.outputs.cache-hit != 'true'
+        run: |
+          $src = "$env:DEPS\qt-src\qtbase-everywhere-src-$env:QT_VERSION"
+          New-Item -ItemType Directory -Force "$env:DEPS\qt-build\qtbase" | Out-Null
+          Set-Location "$env:DEPS\qt-build\qtbase"
+          & "$src\configure.bat" -static -static-runtime -release `
+            -prefix "$env:DEPS\Qt-static" `
+            -nomake examples -nomake tests `
+            -no-opengl -no-openssl -no-dbus
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --build . --parallel
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --install .
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - name: Build static qtsvg
+        if: steps.cache-qt.outputs.cache-hit != 'true'
+        run: |
+          $src = "$env:DEPS\qt-src\qtsvg-everywhere-src-$env:QT_VERSION"
+          New-Item -ItemType Directory -Force "$env:DEPS\qt-build\qtsvg" | Out-Null
+          Set-Location "$env:DEPS\qt-build\qtsvg"
+          & "$env:DEPS\Qt-static\bin\qt-configure-module.bat" $src
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --build . --parallel
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --install .
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      # qttools is only needed for lrelease (LinguistTools); the GUI tools are switched off.
+      - name: Build static qttools
+        if: steps.cache-qt.outputs.cache-hit != 'true'
+        run: |
+          $src = "$env:DEPS\qt-src\qttools-everywhere-src-$env:QT_VERSION"
+          New-Item -ItemType Directory -Force "$env:DEPS\qt-build\qttools" | Out-Null
+          Set-Location "$env:DEPS\qt-build\qttools"
+          & "$env:DEPS\Qt-static\bin\qt-configure-module.bat" $src -- `
+            -DFEATURE_assistant=OFF -DFEATURE_designer=OFF -DFEATURE_pixeltool=OFF `
+            -DFEATURE_qdbus=OFF -DFEATURE_qtdiag=OFF -DFEATURE_qtplugininfo=OFF `
+            -DFEATURE_windeployqt=OFF -DFEATURE_qdoc=OFF -DFEATURE_clang=OFF `
+            -DFEATURE_distancefieldgenerator=OFF -DFEATURE_kmap2qmap=OFF `
+            -DFEATURE_qtattributionsscanner=OFF
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --build . --parallel
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --install .
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+
+      - name: Save static Qt cache
+        if: steps.cache-qt.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.DEPS }}\Qt-static
+          key: qt-static-${{ env.QT_VERSION }}-arm64-${{ env.QT_STATIC_CACHE_REV }}
+      # ---------- libtorrent-rasterbar (static, /MT) ----------
+      - name: Cache libtorrent
+        id: cache-lt
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS }}\libtorrent
+          key: libtorrent-static-${{ env.LIBTORRENT_REF }}-boost${{ env.BOOST_VERSION }}-${{ env.VCPKG_REF }}
+
+      - name: Build libtorrent ${{ env.LIBTORRENT_REF }}
+        if: steps.cache-lt.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/arvidn/libtorrent.git libtorrent-src
+          git -C libtorrent-src checkout $env:LIBTORRENT_REF
+          git -C libtorrent-src submodule update --init --recursive
+          $vcpkgInstalled = "$env:DEPS\vcpkg\installed\$env:VCPKG_TRIPLET"
+          cmake -S libtorrent-src -B libtorrent-build -G Ninja `
+            -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE" `
+            -DCMAKE_INSTALL_PREFIX="$env:DEPS\libtorrent" `
+            -DCMAKE_PREFIX_PATH="$vcpkgInstalled" `
+            -DBoost_NO_BOOST_CMAKE=ON `
+            -DBoost_INCLUDE_DIR="$env:DEPS\boost" `
+            -DBUILD_SHARED_LIBS=OFF `
+            -Dstatic_runtime=ON `
+            -Ddeprecated-functions=OFF
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --build libtorrent-build
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --install libtorrent-build
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+
+      - name: Save libtorrent cache
+        if: steps.cache-lt.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.DEPS }}\libtorrent
+          key: libtorrent-static-${{ env.LIBTORRENT_REF }}-boost${{ env.BOOST_VERSION }}-${{ env.VCPKG_REF }}
+      # ---------- qBittorrent ----------
+      - name: Build qBittorrent
+        run: |
+          $vcpkgInstalled = "$env:DEPS\vcpkg\installed\$env:VCPKG_TRIPLET"
+          $prefix = "$env:DEPS\Qt-static;$env:DEPS\libtorrent;$vcpkgInstalled"
+          cmake -S qbittorrent -B qbittorrent-build -G Ninja `
+            -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE" `
+            -DCMAKE_PREFIX_PATH="$prefix" `
+            -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\dist" `
+            -DBoost_NO_BOOST_CMAKE=ON `
+            -DBoost_INCLUDE_DIR="$env:DEPS\boost" `
+            -DGUI=ON `
+            -DWEBUI=ON `
+            -DSTACKTRACE=OFF `
+            -DMSVC_RUNTIME_DYNAMIC=OFF
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --build qbittorrent-build
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --install qbittorrent-build
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - name: Verify binary is ARM64 and self-contained
+        run: |
+          $exe = "$env:GITHUB_WORKSPACE\dist\bin\qbittorrent.exe"
+          $headers = dumpbin /headers $exe | Select-String "machine"
+          $headers
+          if ($headers -notmatch "ARM64") { throw "qbittorrent.exe is not ARM64" }
+          $deps = dumpbin /dependents $exe | Select-String '\.dll' | ForEach-Object { $_.Line.Trim() }
+          "Imported DLLs:"
+          $deps
+          $bad = $deps | Where-Object { $_ -match '^(Qt6|VCRUNTIME|MSVCP|api-ms-win-crt|ucrtbase|libssl|libcrypto|zlib)' }
+          if ($bad) { throw "exe is not self-contained, it imports: $($bad -join ', ')" }
+          (Get-Item $exe).Length / 1MB | ForEach-Object { "Size: {0:N1} MB" -f $_ }
+
+      # The exe is started and must still be running after 20 seconds. A missing Qt
+      # platform plugin (the usual static-Qt mistake) makes it exit immediately.
+      - name: Smoke test (start the exe)
+        continue-on-error: true
+        run: |
+          $exe = "$env:GITHUB_WORKSPACE\dist\bin\qbittorrent.exe"
+          $p = Start-Process -FilePath $exe -PassThru
+          Start-Sleep -Seconds 20
+          if ($p.HasExited) { throw "qbittorrent.exe exited early with code $($p.ExitCode)" }
+          "qbittorrent.exe is still running after 20 s"
+          Stop-Process -Id $p.Id -Force
+
+      # ---------- Package ----------
+      - name: Collect single exe
+        run: |
+          $name = "qbittorrent_$($env:QBT_VERSION)_arm64_static.exe"
+          Copy-Item "$env:GITHUB_WORKSPACE\dist\bin\qbittorrent.exe" $name
+          "EXE_NAME=$name" | Out-File -Append $env:GITHUB_ENV
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qbittorrent-static
+          path: ${{ env.EXE_NAME }}
+          if-no-files-found: error

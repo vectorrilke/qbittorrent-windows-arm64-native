@@ -1,0 +1,214 @@
+name: Build zip (Windows ARM64, shared Qt)
+
+on:
+  workflow_dispatch:
+    inputs:
+      qbt_tag:
+        description: Upstream qBittorrent tag
+        default: release-5.2.3
+      libtorrent_ref:
+        description: libtorrent-rasterbar tag, branch or commit
+        default: da7a68a440
+      qt_version:
+        description: Qt version
+        default: 6.10.3
+      boost_version:
+        description: Boost version
+        default: 1.91.0
+  workflow_call:
+    inputs:
+      qbt_tag:
+        type: string
+        default: ''
+      libtorrent_ref:
+        type: string
+        default: ''
+      qt_version:
+        type: string
+        default: ''
+      boost_version:
+        type: string
+        default: ''
+    outputs:
+      qbt_version:
+        value: ${{ jobs.build.outputs.qbt_version }}
+      libtorrent_ref:
+        value: ${{ jobs.build.outputs.libtorrent_ref }}
+      qt_version:
+        value: ${{ jobs.build.outputs.qt_version }}
+      boost_version:
+        value: ${{ jobs.build.outputs.boost_version }}
+
+permissions:
+  contents: read
+
+env:
+  # ---- Versions: edit these (or use the dispatch inputs) to pick what gets built ----
+  # Match the "Library versions" table on qbittorrent.org for the release you build.
+  QBT_TAG: ${{ inputs.qbt_tag || 'release-5.2.3' }}
+  LIBTORRENT_REF: ${{ inputs.libtorrent_ref || 'da7a68a440' }} # 2.0.13+gitda7a68a440
+  QT_VERSION: ${{ inputs.qt_version || '6.10.3' }}
+  BOOST_VERSION: ${{ inputs.boost_version || '1.91.0' }}
+  # OpenSSL and zlib come from vcpkg; this ref decides their versions.
+  VCPKG_REF: master
+  VCPKG_TRIPLET: arm64-windows-static-md
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: windows-11-arm
+    outputs:
+      qbt_version: ${{ steps.ver.outputs.qbt_version }}
+      libtorrent_ref: ${{ env.LIBTORRENT_REF }}
+      qt_version: ${{ env.QT_VERSION }}
+      boost_version: ${{ env.BOOST_VERSION }}
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      DEPS: ${{ github.workspace }}\deps
+    steps:
+      - name: Prepare directories
+        run: New-Item -ItemType Directory -Force $env:DEPS | Out-Null
+
+      - name: Derive qBittorrent version from tag
+        id: ver
+        run: |
+          $v = $env:QBT_TAG -replace '^release-', ''
+          "qbt_version=$v" | Out-File -Append $env:GITHUB_OUTPUT
+          "QBT_VERSION=$v" | Out-File -Append $env:GITHUB_ENV
+
+      - name: Set up MSVC (ARM64)
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: arm64
+
+      - name: Clone qBittorrent ${{ env.QBT_TAG }}
+        run: git clone --depth 1 --branch $env:QBT_TAG https://github.com/qbittorrent/qBittorrent.git qbittorrent
+
+      # ---------- Boost (headers only) ----------
+      - name: Cache Boost headers
+        id: cache-boost
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.DEPS }}\boost
+          key: boost-${{ env.BOOST_VERSION }}
+
+      - name: Download Boost ${{ env.BOOST_VERSION }}
+        if: steps.cache-boost.outputs.cache-hit != 'true'
+        run: |
+          $v = $env:BOOST_VERSION
+          $name = "boost_$($v -replace '\.', '_')"
+          $zip = Join-Path $env:RUNNER_TEMP "$name.tar.gz"
+          Invoke-WebRequest "https://archives.boost.io/release/$v/source/$name.tar.gz" -OutFile $zip
+          New-Item -ItemType Directory -Force "$env:DEPS\boost-tmp" | Out-Null
+          tar -xzf $zip -C "$env:DEPS\boost-tmp" "$name/boost"
+          Move-Item "$env:DEPS\boost-tmp\$name" "$env:DEPS\boost"
+
+      # ---------- OpenSSL + zlib (vcpkg) ----------
+      - name: Cache vcpkg packages
+        id: cache-vcpkg
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.DEPS }}\vcpkg
+          key: vcpkg-${{ env.VCPKG_REF }}-${{ env.VCPKG_TRIPLET }}
+
+      - name: Build OpenSSL and zlib with vcpkg
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git "$env:DEPS\vcpkg"
+          git -C "$env:DEPS\vcpkg" checkout $env:VCPKG_REF
+          & "$env:DEPS\vcpkg\bootstrap-vcpkg.bat" -disableMetrics
+          & "$env:DEPS\vcpkg\vcpkg.exe" install openssl zlib --triplet $env:VCPKG_TRIPLET
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      # ---------- Qt (prebuilt native ARM64) ----------
+      - name: Cache Qt
+        id: cache-qt
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.DEPS }}\Qt
+          key: qt-${{ env.QT_VERSION }}-win64_msvc2022_arm64
+
+      - name: Install Qt ${{ env.QT_VERSION }}
+        if: steps.cache-qt.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install --upgrade aqtinstall
+          aqt install-qt windows_arm64 desktop $env:QT_VERSION win64_msvc2022_arm64 --outputdir "$env:DEPS\Qt"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      # ---------- libtorrent-rasterbar ----------
+      - name: Cache libtorrent
+        id: cache-lt
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.DEPS }}\libtorrent
+          key: libtorrent-${{ env.LIBTORRENT_REF }}-boost${{ env.BOOST_VERSION }}-${{ env.VCPKG_REF }}
+
+      - name: Build libtorrent ${{ env.LIBTORRENT_REF }}
+        if: steps.cache-lt.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/arvidn/libtorrent.git libtorrent-src
+          git -C libtorrent-src checkout $env:LIBTORRENT_REF
+          git -C libtorrent-src submodule update --init --recursive
+          $vcpkgInstalled = "$env:DEPS\vcpkg\installed\$env:VCPKG_TRIPLET"
+          cmake -S libtorrent-src -B libtorrent-build -G Ninja `
+            -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE" `
+            -DCMAKE_INSTALL_PREFIX="$env:DEPS\libtorrent" `
+            -DCMAKE_PREFIX_PATH="$vcpkgInstalled" `
+            -DBoost_NO_BOOST_CMAKE=ON `
+            -DBoost_INCLUDE_DIR="$env:DEPS\boost" `
+            -DBUILD_SHARED_LIBS=OFF `
+            -Dstatic_runtime=OFF `
+            -Ddeprecated-functions=OFF
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --build libtorrent-build
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --install libtorrent-build
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      # ---------- qBittorrent ----------
+      - name: Build qBittorrent
+        run: |
+          $qt = (Get-ChildItem "$env:DEPS\Qt\$env:QT_VERSION" -Directory | Select-Object -First 1).FullName
+          "QT_DIR=$qt" | Out-File -Append $env:GITHUB_ENV
+          $vcpkgInstalled = "$env:DEPS\vcpkg\installed\$env:VCPKG_TRIPLET"
+          $prefix = "$qt;$env:DEPS\libtorrent;$vcpkgInstalled"
+          cmake -S qbittorrent -B qbittorrent-build -G Ninja `
+            -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE" `
+            -DCMAKE_PREFIX_PATH="$prefix" `
+            -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\dist" `
+            -DBoost_NO_BOOST_CMAKE=ON `
+            -DBoost_INCLUDE_DIR="$env:DEPS\boost" `
+            -DGUI=ON `
+            -DWEBUI=ON `
+            -DSTACKTRACE=OFF `
+            -DMSVC_RUNTIME_DYNAMIC=ON
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --build qbittorrent-build
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --install qbittorrent-build
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - name: Verify binary is ARM64
+        run: |
+          $out = dumpbin /headers "$env:GITHUB_WORKSPACE\dist\bin\qbittorrent.exe" | Select-String "machine"
+          $out
+          if ($out -notmatch "ARM64") { throw "qbittorrent.exe is not ARM64" }
+
+      # ---------- Package ----------
+      - name: Bundle Qt runtime and zip
+        run: |
+          $exe = "$env:GITHUB_WORKSPACE\dist\bin\qbittorrent.exe"
+          & "$env:QT_DIR\bin\windeployqt.exe" --release --no-translations $exe
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $zip = "qbittorrent_$($env:QBT_VERSION)_arm64.zip"
+          Compress-Archive -Path "$env:GITHUB_WORKSPACE\dist\bin\*" -DestinationPath $zip
+          "ZIP_NAME=$zip" | Out-File -Append $env:GITHUB_ENV
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qbittorrent-zip
+          path: ${{ env.ZIP_NAME }}
+          if-no-files-found: error

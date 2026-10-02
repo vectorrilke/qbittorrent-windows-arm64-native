@@ -1,0 +1,88 @@
+name: Build and release (Windows ARM64)
+
+# Main entry point: builds the zip (shared Qt) and the single exe (static Qt) in
+# parallel, then publishes both in ONE GitHub Release.
+# Leave the version inputs empty to use the defaults at the top of build-zip.yml
+# and build-static.yml (keep the two files' defaults identical).
+
+on:
+  workflow_dispatch:
+    inputs:
+      qbt_tag:
+        description: Upstream qBittorrent tag (empty = default)
+        default: ''
+      libtorrent_ref:
+        description: libtorrent-rasterbar tag, branch or commit (empty = default)
+        default: ''
+      qt_version:
+        description: Qt version (empty = default)
+        default: ''
+      boost_version:
+        description: Boost version (empty = default)
+        default: ''
+      publish:
+        description: Publish a GitHub Release (otherwise only build the artifacts)
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  zip:
+    uses: ./.github/workflows/build-zip.yml
+    with:
+      qbt_tag: ${{ inputs.qbt_tag }}
+      libtorrent_ref: ${{ inputs.libtorrent_ref }}
+      qt_version: ${{ inputs.qt_version }}
+      boost_version: ${{ inputs.boost_version }}
+
+  static:
+    uses: ./.github/workflows/build-static.yml
+    with:
+      qbt_tag: ${{ inputs.qbt_tag }}
+      libtorrent_ref: ${{ inputs.libtorrent_ref }}
+      qt_version: ${{ inputs.qt_version }}
+      boost_version: ${{ inputs.boost_version }}
+
+  release:
+    needs: [zip, static]
+    # Publish when the zip built, even if the static build failed (it is simply left out).
+    if: ${{ !cancelled() && inputs.publish && needs.zip.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download zip
+        uses: actions/download-artifact@v4
+        with:
+          name: qbittorrent-zip
+          path: release-files
+
+      - name: Download static exe
+        if: needs.static.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: qbittorrent-static
+          path: release-files
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.zip.outputs.qbt_version }}-arm64
+          target_commitish: ${{ github.sha }}
+          name: qBittorrent ${{ needs.zip.outputs.qbt_version }}-arm64
+          files: release-files/*
+          draft: false
+          prerelease: ${{ contains(needs.zip.outputs.qbt_version, 'rc') || contains(needs.zip.outputs.qbt_version, 'beta') }}
+          body: |
+            Native ARM64 builds of qBittorrent ${{ needs.zip.outputs.qbt_version }}.
+            Commit: ${{ github.sha }}
+
+            Files:
+            - `qbittorrent_${{ needs.zip.outputs.qbt_version }}_arm64.zip`: qBittorrent with the Qt DLLs next to it. Extract and run.
+            - `qbittorrent_${{ needs.zip.outputs.qbt_version }}_arm64_static.exe`: a single self-contained exe (static Qt, no DLLs).
+
+            Library versions:
+            - qBittorrent: ${{ needs.zip.outputs.qbt_version }}
+            - Qt: ${{ needs.zip.outputs.qt_version }}
+            - libtorrent: ${{ needs.zip.outputs.libtorrent_ref }}
+            - Boost: ${{ needs.zip.outputs.boost_version }}
