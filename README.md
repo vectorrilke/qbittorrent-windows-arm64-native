@@ -1,4 +1,4 @@
-# qBittorrent for Windows ARM64
+# <img src="assets/icon.svg" height="32" align="absmiddle" alt=""> qBittorrent for Windows ARM64
 
 The goal of this repository is to provide native Windows ARM64 builds of [qBittorrent](https://www.qbittorrent.org), because the qBittorrent project currently has [no plans](https://github.com/qbittorrent/qBittorrent/discussions/23613#discussioncomment-15508814) to publish official ARM64 binaries.
 
