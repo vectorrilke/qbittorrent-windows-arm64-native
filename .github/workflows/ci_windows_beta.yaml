@@ -80,11 +80,12 @@ jobs:
         with:
           path: |
             C:/vcpkg/installed
-          # Bump the trailing vN suffix whenever the installed package list
-          # below changes in a way that is incompatible with previously cached output.
-          key: vcpkg-${{ env.vcpkg_triplet }}-${{ env.vcpkg_commit }}-openssl-zlib-v1
-          restore-keys: |
-            vcpkg-${{ env.vcpkg_triplet }}-${{ env.vcpkg_commit }}-
+          # The key includes a hash of the OpenSSL ARM64 overlay inputs so the
+          # cache is invalidated whenever the patch changes. There is
+          # intentionally NO restore-keys fallback: restoring an older,
+          # unpatched OpenSSL build would make vcpkg think it is already
+          # installed and silently skip rebuilding it with the patch.
+          key: vcpkg-${{ env.vcpkg_triplet }}-${{ env.vcpkg_commit }}-openssl-zlib-overlay-${{ hashFiles('.github/vcpkg/openssl-arm64-stack-probe.patch', '.github/scripts/prepare-openssl-arm64-overlay.ps1') }}-v2
 
       - name: Install vcpkg dependencies
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
@@ -92,8 +93,16 @@ jobs:
         run: |
           $packages = "${{ env.vcpkg_packages }}" -split ',' | ForEach-Object { "${_}:${{ env.vcpkg_triplet }}" }
 
-          & "$env:VCPKG_ROOT/vcpkg.exe" upgrade --no-dry-run
-          & "$env:VCPKG_ROOT/vcpkg.exe" install --clean-after-build @packages
+          # Same OpenSSL ARM64 fix as ci_beta_test.yaml: patched port that
+          # fixes the stack-probe (__chkstk) problem which crashes the app.
+          $overlayPorts = Join-Path $env:RUNNER_TEMP "vcpkg-overlay-ports"
+          & "${{ github.workspace }}/.github/scripts/prepare-openssl-arm64-overlay.ps1" `
+            -VcpkgRoot "$env:VCPKG_ROOT" `
+            -OverlayRoot "$overlayPorts" `
+            -RepositoryRoot "${{ github.workspace }}"
+
+          & "$env:VCPKG_ROOT/vcpkg.exe" upgrade --no-dry-run "--overlay-ports=$overlayPorts"
+          & "$env:VCPKG_ROOT/vcpkg.exe" install --clean-after-build "--overlay-ports=$overlayPorts" @packages
 
       - name: Build source URLs
         shell: pwsh
@@ -230,7 +239,9 @@ jobs:
           # below changes in a way that is incompatible with previously cached output.
           # v2: fixed VCPKG_ROOT being clobbered by msvc-dev-cmd so OpenSSL is
           # now correctly discovered and linked into libtorrent.
-          key: libtorrent-${{ env.libtorrent_ref }}-${{ env.vcpkg_triplet }}-${{ env.boost_version }}-v2
+          # v3: libtorrent statically links OpenSSL, so it must be rebuilt
+          # against the patched ARM64 OpenSSL (hash of the overlay inputs).
+          key: libtorrent-${{ env.libtorrent_ref }}-${{ env.vcpkg_triplet }}-${{ env.boost_version }}-${{ hashFiles('.github/vcpkg/openssl-arm64-stack-probe.patch', '.github/scripts/prepare-openssl-arm64-overlay.ps1') }}-v3
 
       - name: Build libtorrent for ARM64
         if: steps.cache-libtorrent.outputs.cache-hit != 'true'
@@ -259,6 +270,7 @@ jobs:
             -Dmmap-disk-io=OFF `
             -Ddeprecated-functions=ON `
             -Dstatic_runtime=ON `
+            -Dencryption=ON `
             -DVCPKG_TARGET_TRIPLET=${{ env.vcpkg_triplet }}
 
           cmake --build build
@@ -313,6 +325,7 @@ jobs:
             -DQT_HOST_PATH="$hostQtRoot" `
             -DCMAKE_FIND_PACKAGE_TARGETS_GLOBAL=ON `
             -DOPENSSL_ROOT_DIR="$vcpkgInstalled" `
+            -DOPENSSL_USE_STATIC_LIBS=ON `
             -DZLIB_ROOT="$vcpkgInstalled" `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
             -DVCPKG_MANIFEST_MODE=OFF `
