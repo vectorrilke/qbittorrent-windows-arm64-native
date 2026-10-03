@@ -1,6 +1,8 @@
 # <img src="assets/icon.svg" height="32" align="absmiddle" alt=""> qBittorrent for Windows ARM64
 
-[![Build and release](https://github.com/vectorrilke/qbittorrent-windows-arm64-native/actions/workflows/release.yml/badge.svg)](https://github.com/vectorrilke/qbittorrent-windows-arm64-native/actions/workflows/release.yml) [![Prerelease](https://img.shields.io/github/v/release/vectorrilke/qbittorrent-windows-arm64-native?include_prereleases&labelColor=2b3137&color=orange&label=prerelease)](https://github.com/vectorrilke/qbittorrent-windows-arm64-native/releases/latest) [![Release](https://img.shields.io/github/v/release/vectorrilke/qbittorrent-windows-arm64-native?labelColor=2b3137&color=6e40c9)](https://github.com/vectorrilke/qbittorrent-windows-arm64-native/releases/latest) [![Upstream](https://img.shields.io/github/v/release/qbittorrent/qBittorrent?label=upstream&logo=qbittorrent&labelColor=2b3137&color=2f67ba)](https://github.com/qbittorrent/qBittorrent/releases) ![Platform](https://img.shields.io/badge/platform-Windows%2011%20ARM64-a52a4a?logo=windows11&logoColor=white&labelColor=2b3137)
+[![Build and release](https://github.com/vectorrilke/qbittorrent-windows-arm64-native/actions/workflows/release.yml/badge.svg)](https://github.com/vectorrilke/qbittorrent-windows-arm64-native/actions/workflows/release.yml) [![Prerelease](https://img.shields.io/github/v/release/vectorrilke/qbittorrent-windows-arm64-native?include_prereleases&labelColor=2b3137&color=orange&label=prerelease)](https://github.com/vectorrilke/qbittorrent-windows-arm64-native/releases/latest) [![Latest release](https://img.shields.io/github/v/release/vectorrilke/qbittorrent-windows-arm64-native?labelColor=2b3137&color=6e40c9)](https://github.com/vectorrilke/qbittorrent-windows-arm64-native/releases/latest) [![Upstream](https://img.shields.io/github/v/release/qbittorrent/qBittorrent?label=upstream&logo=qbittorrent&labelColor=2b3137&color=2f67ba)](https://github.com/qbittorrent/qBittorrent/releases) ![Platform](https://img.shields.io/badge/platform-Windows%2011%20ARM64-a52a4a?logo=windows11&logoColor=white&labelColor=2b3137)
+
+**Native qBittorrent ARM64 builds for Windows on Arm (WoA). Automatically updated, single-file static executable (.exe) and dynamic zip releases.**
 
 The goal of this repository is to provide native Windows ARM64 builds of [qBittorrent](https://www.qbittorrent.org), because the qBittorrent project currently has [no plans](https://github.com/qbittorrent/qBittorrent/discussions/23613#discussioncomment-15508814) to publish official ARM64 binaries.
 
@@ -14,7 +16,7 @@ Builds are produced through:
 Each build workflow can also be run on its own and then only produces a workflow artifact.
 
 > [!NOTE]
-> **Recommended download is the static exe.** It is a single file, so there is nothing to extract or set up: download it, put it anywhere and run it. The zip does the same job but has to be extracted first and comes with a folder of Qt DLLs and plugins.
+> **Recommended release download is the static exe.** It is a single file, so there is nothing to extract or set up: download it, put it anywhere and run it. The zip does the same job but has to be extracted first and comes with a folder of Qt DLLs and plugins.
 
 ## Latest updates
 #### October 2, 2026
