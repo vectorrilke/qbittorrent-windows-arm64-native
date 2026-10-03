@@ -46,20 +46,23 @@ Both keep their settings in `%APPDATA%`, so neither behaves like a fully self-co
 
 The notes of each release list the qBittorrent, Qt, libtorrent and Boost versions it was built with. Components mirror upstream versions.
 
+
 ## Useful links
 
-I thought it could be useful for someone to know that qbittorrent can be themed, and there are lot of precompiled `.qbtheme` files out there.
-Here is rather incomplete list for repositories to download them, most of the links contain screenshots and "how-to" for apply, compile or creating your own theme:
+> [!TIP]
+> ##### Theming qBittorrent
+> I thought it could be useful for someone to know that qbittorrent can be themed, and there are lot of precompiled `.qbtheme` files out there.
+> Here is rather incomplete list for repositories to download them, most of the links contain screenshots and "how-to" for apply, compile or creating your own theme:
 
-- **Dracula** official: https://github.com/dracula/qbittorrent
-- **Catpuccin** official including flavours and light/dark variants: https://github.com/catppuccin/qbittorrent
-- **Material Design** - https://github.com/BaraShiro/Material-qBittorrent
-- **Fluent Design** - https://github.com/witalihirsch/qBitTorrent-fluent-theme
-- **Nord** - https://github.com/Zabooby/qbittorrent-config
-- **AyU** - https://github.com/maboroshin/qBittorrentDarktheme
-- **Solarized** - same repo as above
-- **Dark** - same repo as above
-- Mumble, Breeze and other - https://github.com/jagannatharjun/qbt-theme
-- [(incomplete) list by authors of qBittorrent](https://github.com/qbittorrent/qBittorrent/wiki/List-of-known-qBittorrent-themes)
-- another great, [curated, up-to-date **selection of great themes**](https://github.com/MahdiMirzadeh/qbittorrent)
-- I am sure there are plenty of others, this just to save you from googling.
+ - **Dracula** official: https://github.com/dracula/qbittorrent
+ - **Catpuccin** official including flavours and light/dark variants: https://github.com/catppuccin/qbittorrent
+ - **Material Design** - https://github.com/BaraShiro/Material-qBittorrent
+ - **Fluent Design** - https://github.com/witalihirsch/qBitTorrent-fluent-theme
+ - **Nord** - https://github.com/Zabooby/qbittorrent-config
+ - **AyU** - https://github.com/maboroshin/qBittorrentDarktheme
+ - **Solarized** - same repo as above
+ - **Dark** - same repo as above
+ - Mumble, Breeze and other - https://github.com/jagannatharjun/qbt-theme
+ - [(incomplete) list by authors of qBittorrent](https://github.com/qbittorrent/qBittorrent/wiki/List-of-known-qBittorrent-themes)
+ - another great, [curated, up-to-date **selection of great themes**](https://github.com/MahdiMirzadeh/qbittorrent)
+ - I am sure there are plenty of others, this just to save you from googling.
