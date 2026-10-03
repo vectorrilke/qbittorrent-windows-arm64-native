@@ -14,7 +14,7 @@ Builds are produced through:
 Each build workflow can also be run on its own and then only produces a workflow artifact.
 
 > [!NOTE]
-> **Recommended download: the static exe.** It is a single file, so there is nothing to extract or set up: download it, put it anywhere and run it. The zip does the same job but has to be extracted first and comes with a folder of Qt DLLs and plugins.
+> **Recommended download is the static exe.** It is a single file, so there is nothing to extract or set up: download it, put it anywhere and run it. The zip does the same job but has to be extracted first and comes with a folder of Qt DLLs and plugins.
 
 ## Latest updates
 #### October 2, 2026
