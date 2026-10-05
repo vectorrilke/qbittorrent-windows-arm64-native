@@ -17,6 +17,8 @@ Each build workflow can also be run on its own and then only produces a workflow
 
 > [!NOTE]
 > **Recommended release download is the static exe.** It is a single file, so there is nothing to extract or set up: download it, put it anywhere and run it. The zip does the same job but has to be extracted first and comes with a folder of Qt DLLs and plugins.
+>
+> **All builds come without installer, so they can be described as *"portable"*.** That means you need to manually unblock them in Windows Firewall. Usually your Windows Firewall (or other third-party antivirus software that you are using) asks on the first run of qBittorrent to *"Allow application to connect to Internet"*.
 
 ## Latest updates
 #### October 2, 2026
