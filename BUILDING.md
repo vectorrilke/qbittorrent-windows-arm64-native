@@ -58,13 +58,13 @@ A good source for the numbers is the download page on [qbittorrent.org/download]
 | `boost_version` | The Boost version as listed. | `1.92.0` |
 
 Notes:
-- The website often lists several libtorrent and Boost versions for one release, for the different builds it ships (for example libtorrent 1.2 and 2.0). Pick the set for the build you want to match. The 5.2.3 defaults here are the libtorrent 2.0 build.
+- The website often lists several libtorrent and Boost versions for one release, for the different builds it ships (for example libtorrent 1.2 and 2.0). Pick the set for the build you want to match. The 5.3.0 defaults here are the libtorrent 2.1 build. For the older libtorrent 2.0 build, use the 5.2.4 values (`qbt_tag: release-5.2.4`, `libtorrent_ref: da7a68a440`, `qt_version: 6.10.3`, `boost_version: 1.91.0`).
 - The release notes show the values you entered, so the libtorrent line shows the commit hash.
 - The release is tagged `v<version>-arm64`, taken from `qbt_tag` without the `release-` prefix.
 
 ## Private trackers
 
-Some private trackers have client bans. Builds with qBittorrent 5.3.0rc1 were rejected as "banned client" on one tracker, while 5.2.3 (libtorrent 2.0.x) was accepted. Some trackers also ban libtorrent 2.1. Check your tracker's approved-client list before choosing a version.
+Some private trackers ban certain clients. The default 5.3.0 build uses libtorrent 2.1, which a few trackers reject (5.3.0rc1 was refused as a "banned client" on one of them, while 5.2.3 with libtorrent 2.0.x was accepted). If your tracker is affected, build with the libtorrent 2.0 values from the Notes above.
 
 ## Status
 
