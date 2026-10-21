@@ -15,8 +15,8 @@ The `publish` toggle controls whether a GitHub Release is created (otherwise onl
 
 **Zip build** (`build-zip.yml`):
 - Runs on `windows-11-arm` with MSVC
-- Boost (headers only, not compiled; default 1.91.0)
-- Qt prebuilt via aqtinstall with host `windows_arm64` (default 6.10.3)
+- Boost (headers only, not compiled; default 1.92.0)
+- Qt prebuilt via aqtinstall with host `windows_arm64` (default 6.11.2)
 - OpenSSL and zlib from vcpkg (triplet `arm64-windows-static-md`)
 - libtorrent built with shared MSVC runtime
 - qBittorrent built and packaged with `windeployqt` into a zip
@@ -34,13 +34,13 @@ All builds cache Boost headers, vcpkg packages, Qt, and libtorrent to speed up r
 
 1. Go to Actions tab and select **Build and release (Windows ARM64)**
 2. Click **Run workflow**
-3. Leave version fields empty for the 5.2.3 defaults (recommended), or fill ALL FOUR fields (`qbt_tag`, `libtorrent_ref`, `qt_version`, `boost_version`) to build another version
+3. Leave version fields empty for the 5.3.0 defaults (recommended), or fill ALL FOUR fields (`qbt_tag`, `libtorrent_ref`, `qt_version`, `boost_version`) to build another version
 
 The version fields are also set in the `env:` block at the top of `build-zip.yml` and `build-static.yml`—keep those two files identical there. Defaults are:
-- `qbt_tag: release-5.2.3`
-- `libtorrent_ref: da7a68a440` (2.0.13)
-- `qt_version: 6.10.3`
-- `boost_version: 1.91.0`
+- `qbt_tag: release-5.3.0`
+- `libtorrent_ref: aa09332d4a` (2.1.2)
+- `qt_version: 6.11.2`
+- `boost_version: 1.92.0`
 
 The `qbt_tag` must be an upstream qBittorrent tag like `release-5.2.4`. Qt >= 6.8 is needed for prebuilt ARM64 packages. Only the 5.x CMake build has been tested.
 
@@ -54,7 +54,7 @@ A good source for the numbers is the download page on [qbittorrent.org/download]
 |-------|---------------|-----------------|
 | `qbt_tag` | The upstream git tag, `release-<version>`. Not `v5.2.4`, and not `v5.2.4-arm64`, which is the name of the release this workflow creates. | `release-5.2.4` |
 | `libtorrent_ref` | Only the commit hash from the website's libtorrent entry, i.e. the part after `+git`. Do not enter `2.0.15+git2bc9c4f7da`: it is a description, not a git ref, and the checkout would fail. A full hash also works. | `2bc9c4f7da` |
-| `qt_version` | The Qt version as listed. | `6.10.3` |
+| `qt_version` | The Qt version as listed. | `6.11.2` |
 | `boost_version` | The Boost version as listed. | `1.92.0` |
 
 Notes:
