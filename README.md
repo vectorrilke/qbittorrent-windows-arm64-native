@@ -12,6 +12,7 @@ Builds are produced through:
 - a main workflow, `.github/workflows/release.yml`, which runs two build workflows in parallel and publishes both results in one release:
   - `.github/workflows/build-zip.yml`: qBittorrent with the Qt DLLs bundled next to it
   - `.github/workflows/build-static.yml`: a single self-contained `qbittorrent.exe` (static Qt)
+- libtorrent 2.1, as in the official builds since 5.3.0. A few private trackers still ban it; if yours does, use the 5.2.4 release (libtorrent 2.0).
 
 Each build workflow can also be run on its own and then only produces a workflow artifact.
 
@@ -21,10 +22,12 @@ Each build workflow can also be run on its own and then only produces a workflow
 > **All builds come without installer, so they can be described as *"portable"*.** That means you need to manually unblock them in Windows Firewall. Usually your Windows Firewall (or other third-party antivirus software that you are using) asks on the first run of qBittorrent to *"Allow application to connect to Internet"*.
 
 ## Latest updates
+#### November 25, 2026
+> * qBittorrent **5.3.1** (libtorrent 2.1.3, Qt 6.11.3, Boost 1.92.0).
+
 #### October 21, 2026
 > * qBittorrent **5.3.0** for Windows ARM64, built natively. Libraries match the official 5.3.0 builds on qbittorrent.org: libtorrent 2.1.2, Qt 6.11.2, Boost 1.92.0.
 > * Both the single-file static exe and the zip with Qt DLLs are offered, as before.
-> * Note: this build uses libtorrent 2.1. A few private trackers still ban it. If yours does, use the 5.2.4 release instead (libtorrent 2.0).
 
 #### October 2, 2026
 > * Completely redone workflows files. 
