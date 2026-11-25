@@ -16,7 +16,7 @@ The `publish` toggle controls whether a GitHub Release is created (otherwise onl
 **Zip build** (`build-zip.yml`):
 - Runs on `windows-11-arm` with MSVC
 - Boost (headers only, not compiled; default 1.92.0)
-- Qt prebuilt via aqtinstall with host `windows_arm64` (default 6.11.2)
+- Qt prebuilt via aqtinstall with host `windows_arm64` (default 6.11.3)
 - OpenSSL and zlib from vcpkg (triplet `arm64-windows-static-md`)
 - libtorrent built with shared MSVC runtime
 - qBittorrent built and packaged with `windeployqt` into a zip
@@ -34,12 +34,12 @@ All builds cache Boost headers, vcpkg packages, Qt, and libtorrent to speed up r
 
 1. Go to Actions tab and select **Build and release (Windows ARM64)**
 2. Click **Run workflow**
-3. Leave version fields empty for the 5.3.0 defaults (recommended), or fill ALL FOUR fields (`qbt_tag`, `libtorrent_ref`, `qt_version`, `boost_version`) to build another version
+3. Leave version fields empty for the 5.3.1 defaults (recommended), or fill ALL FOUR fields (`qbt_tag`, `libtorrent_ref`, `qt_version`, `boost_version`) to build another version
 
 The version fields are also set in the `env:` block at the top of `build-zip.yml` and `build-static.yml`—keep those two files identical there. Defaults are:
-- `qbt_tag: release-5.3.0`
-- `libtorrent_ref: aa09332d4a` (2.1.2)
-- `qt_version: 6.11.2`
+- `qbt_tag: release-5.3.1`
+- `libtorrent_ref: 87b77c039e` (2.1.3)
+- `qt_version: 6.11.3`
 - `boost_version: 1.92.0`
 
 The `qbt_tag` must be an upstream qBittorrent tag like `release-5.2.4`. Qt >= 6.8 is needed for prebuilt ARM64 packages. Only the 5.x CMake build has been tested.
@@ -58,13 +58,13 @@ A good source for the numbers is the download page on [qbittorrent.org/download]
 | `boost_version` | The Boost version as listed. | `1.92.0` |
 
 Notes:
-- The website often lists several libtorrent and Boost versions for one release, for the different builds it ships (for example libtorrent 1.2 and 2.0). Pick the set for the build you want to match. The 5.3.0 defaults here are the libtorrent 2.1 build. For the older libtorrent 2.0 build, use the 5.2.4 values (`qbt_tag: release-5.2.4`, `libtorrent_ref: da7a68a440`, `qt_version: 6.10.3`, `boost_version: 1.91.0`).
+- The website often lists several libtorrent and Boost versions for one release, for the different builds it ships (for example libtorrent 1.2 and 2.0). Pick the set for the build you want to match. The 5.3.1 defaults here are the libtorrent 2.1 build. For the older libtorrent 2.0 build, use the 5.2.4 values (`qbt_tag: release-5.2.4`, `libtorrent_ref: da7a68a440`, `qt_version: 6.10.3`, `boost_version: 1.91.0`).
 - The release notes show the values you entered, so the libtorrent line shows the commit hash.
 - The release is tagged `v<version>-arm64`, taken from `qbt_tag` without the `release-` prefix.
 
 ## Private trackers
 
-Some private trackers ban certain clients. The default 5.3.0 build uses libtorrent 2.1, which a few trackers reject (5.3.0rc1 was refused as a "banned client" on one of them, while 5.2.3 with libtorrent 2.0.x was accepted). If your tracker is affected, build with the libtorrent 2.0 values from the Notes above.
+Some private trackers ban certain clients. The default 5.3.1 build uses libtorrent 2.1, which a few trackers reject (5.3.0rc1 was refused as a "banned client" on one of them, while 5.2.3 with libtorrent 2.0.x was accepted). If your tracker is affected, build with the libtorrent 2.0 values from the Notes above.
 
 ## Status
 

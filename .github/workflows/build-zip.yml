@@ -5,13 +5,13 @@ on:
     inputs:
       qbt_tag:
         description: Upstream qBittorrent tag
-        default: release-5.3.0
+        default: release-5.3.1
       libtorrent_ref:
         description: libtorrent-rasterbar tag, branch or commit
-        default: aa09332d4a
+        default: 87b77c039e
       qt_version:
         description: Qt version
-        default: 6.11.2
+        default: 6.11.3
       boost_version:
         description: Boost version
         default: 1.92.0
@@ -45,9 +45,9 @@ permissions:
 env:
   # ---- Versions: edit these (or use the dispatch inputs) to pick what gets built ----
   # Match the "Library versions" table on qbittorrent.org for the release you build.
-  QBT_TAG: ${{ inputs.qbt_tag || 'release-5.3.0' }}
-  LIBTORRENT_REF: ${{ inputs.libtorrent_ref || 'aa09332d4a' }} # 2.1.2+gitaa09332d4a
-  QT_VERSION: ${{ inputs.qt_version || '6.11.2' }}
+  QBT_TAG: ${{ inputs.qbt_tag || 'release-5.3.1' }}
+  LIBTORRENT_REF: ${{ inputs.libtorrent_ref || '87b77c039e' }} # 2.1.3+git87b77c039e
+  QT_VERSION: ${{ inputs.qt_version || '6.11.3' }}
   BOOST_VERSION: ${{ inputs.boost_version || '1.92.0' }}
   # OpenSSL and zlib come from vcpkg; this ref decides their versions.
   VCPKG_REF: master
